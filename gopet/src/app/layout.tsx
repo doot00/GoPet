@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import NavBar from "./components/NavBar";
 import Header from "./components/Header";
+import PageUpButton from "./components/PageUpButton";
+import LocalHotel from "./components/LocalHotel";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -20,7 +22,8 @@ export default function RootLayout({
           <Header/>
         </header>
         <NavBar />
-        {children}
+        <LocalHotel />
+        <PageUpButton/>
       </body>
     </html>
   );

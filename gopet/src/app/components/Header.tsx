@@ -9,6 +9,7 @@ import ListSearch from "./ListSearch";
 
 const Header = () => {
   return (
+    <header className="header">
       <div className="flex top-0 left-0 z-50 justify-between items-center">
         <Link href="/">
           <div className="flex items-center m-5">
@@ -19,12 +20,13 @@ const Header = () => {
               height={20}
               priority
             />
-            <h1 className="ml-5 text-2xl">고 펫</h1>
+            <h1 className="ml-5 text-3xl">고 펫</h1>
           </div>
         </Link>
         <ListSearch/>
         <FiMenu className="text-3xl m-5"/>
       </div>
+    </header>
   );
 };
 

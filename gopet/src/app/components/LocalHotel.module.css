@@ -1,0 +1,10 @@
+.bgimage {
+  width: 300px;
+  height: 200px;
+  background-image: url('/picture_images/localhotel/seoul.png'); /* 이미지 경로 */
+  background-size: cover; /* 이미지가 div를 꽉 채우도록 */
+  background-position: center; /* 중앙 정렬 */
+  background-repeat: no-repeat; /* 반복 없음 */
+
+}
+
