@@ -27,7 +27,7 @@ const slideData: Slide[] = [
 export default function SwiperCarousel() {
     return (
         <div className='w-full'>
-            <h1 className="text-3xl mt-10">지역별 숙박</h1>
+            <h1 className="text-3xl mt-10">🏖️ 지역별 숙박</h1>
             <Swiper modules={[Navigation, Pagination, Autoplay]}
                 spaceBetween={10}
                 slidesPerView={1}
@@ -40,30 +40,31 @@ export default function SwiperCarousel() {
                 {slideData.map((slide) => (
                     <SwiperSlide key={slide.id}>
                         <div className="grid grid-cols-4 overfloew-hidden p-5 m-5">
-                            <div className="flex flex-col items-center justify-center w-[300px] h-[400px] bg-cover bg-center relative rounded-3xl opacity-90"
+                            <button className="flex flex-col items-center justify-center w-[285px] h-[400px] 
+                            bg-cover bg-center relative rounded-3xl opacity-90" 
+                            style={{ backgroundImage: `url(${slide.image})`}}>
+                                <p className="text-white text-6xl font-bold z-10 ">
+                                    {slide.title}
+                                </p>
+                            </button>
+                            <button className="flex flex-col items-center justify-center w-[285px] h-[400px] bg-cover bg-center relative rounded-3xl opacity-90"
                                 style={{ backgroundImage: `url(${slide.image})` }}>
                                 <p className="text-white text-6xl font-bold z-10 ">
                                     {slide.title}
                                 </p>
-                            </div>
-                            <div className="flex flex-col items-center justify-center w-[300px] h-[400px] bg-cover bg-center relative rounded-3xl opacity-90"
+                            </button>
+                            <button className="flex flex-col items-center justify-center w-[285px] h-[400px] bg-cover bg-center relative rounded-3xl opacity-90"
                                 style={{ backgroundImage: `url(${slide.image})` }}>
                                 <p className="text-white text-6xl font-bold z-10 ">
                                     {slide.title}
                                 </p>
-                            </div>
-                            <div className="flex flex-col items-center justify-center w-[300px] h-[400px] bg-cover bg-center relative rounded-3xl opacity-90"
+                            </button>
+                            <button className="flex flex-col items-center justify-center w-[285px] h-[400px] bg-cover bg-center relative rounded-3xl opacity-90"
                                 style={{ backgroundImage: `url(${slide.image})` }}>
                                 <p className="text-white text-6xl font-bold z-10 ">
                                     {slide.title}
                                 </p>
-                            </div>
-                            <div className="flex flex-col items-center justify-center w-[300px] h-[400px] bg-cover bg-center relative rounded-3xl opacity-90"
-                                style={{ backgroundImage: `url(${slide.image})` }}>
-                                <p className="text-white text-6xl font-bold z-10 ">
-                                    {slide.title}
-                                </p>
-                            </div>
+                            </button>
                         </div>
                     </SwiperSlide>
                 ))}

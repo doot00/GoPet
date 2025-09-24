@@ -15,8 +15,6 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: 'Juache', sans-serif;
-  width: 1380px;
-  height: 980px;
   margin: 0 auto;
 }
 
@@ -40,4 +38,8 @@ body {
 
 .swiper-pagination-bullet-active {
   background-color: black;
+}
+
+.swiper-slide {
+  margin-right: 0px;
 }
