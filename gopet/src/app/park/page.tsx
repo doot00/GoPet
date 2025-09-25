@@ -1,10 +1,15 @@
+"use client";
+
+import { useToggleNav } from "../components/hooks/useToggleNav";
+import Header from "../components/main/Header";
 
 const park = () => {
-    return (
-        <div className="park">
-            <h3>park</h3>
-        </div>
-    )
-}
+  const { isNavOpen, toggleNav } = useToggleNav(false);
+  return (
+    <>
+      <Header isNavOpen={isNavOpen} toggleNav={toggleNav} />;
+    </>
+  );
+};
 
 export default park;

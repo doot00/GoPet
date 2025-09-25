@@ -5,13 +5,17 @@ import Link from "next/link";
 import Image from "next/image";
 import ListSearch from "./ListSearch";
 import NavBar from "./NavBar";
+import { useToggleNav } from "../hooks/useToggleNav";
+
+type HeaderProps = {
+  isNavOpen: boolean;
+  toggleNav: () => void;
+}
 
 
-const Header = () => {
-  const [isNavOpen, setIsNavOpen] = useState(true);
-  const handleClick = () => {
-    setIsNavOpen((prev) => !prev);
-  }
+const Header: React.FC<HeaderProps> = ({isNavOpen, toggleNav}) => {
+  
+  
   return (
     <div className="grid grid-rows-1 grid-cols-1 gap4">
       <div className="flex items-center">
@@ -32,7 +36,7 @@ const Header = () => {
         </div>
       </div>
       <div className="flex justify-end items-center">
-        <button onClick={handleClick}>
+        <button onClick={toggleNav}>
           <FiMenu className="text-3xl m-5" />
         </button>
       </div>

@@ -1,10 +1,15 @@
+"use client";
+
+import { useToggleNav } from "../components/hooks/useToggleNav";
+import Header from "../components/main/Header";
 
 const hospital = () => {
-    return (
-        <div className="hospital">
-            <h3>hospital</h3>
-        </div>
-    )
-}
+  const { isNavOpen, toggleNav } = useToggleNav(false);
+  return (
+    <>
+      <Header isNavOpen={isNavOpen} toggleNav={toggleNav} />;
+    </>
+  );
+};
 
 export default hospital;

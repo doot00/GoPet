@@ -1,9 +1,15 @@
+"use client";
+
+import { useToggleNav } from "../components/hooks/useToggleNav";
+import Header from "../components/main/Header";
+
 const festival = () => {
-    return (
-        <div className="festival">
-            <h3>festival</h3>
-        </div>
-    )
-}
+  const { isNavOpen, toggleNav } = useToggleNav(false);
+  return (
+    <>
+      <Header isNavOpen={isNavOpen} toggleNav={toggleNav} />;
+    </>
+  );
+};
 
 export default festival;

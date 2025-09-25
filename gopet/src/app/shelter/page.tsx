@@ -1,10 +1,15 @@
+"use client";
+
+import { useToggleNav } from "../components/hooks/useToggleNav";
+import Header from "../components/main/Header";
 
 const shelter = () => {
-    return (
-        <div className="shelter">
-            <h3>shelter</h3>
-        </div>
-    )
-}
+  const { isNavOpen, toggleNav } = useToggleNav(false);
+  return (
+    <>
+      <Header isNavOpen={isNavOpen} toggleNav={toggleNav} />;
+    </>
+  );
+};
 
 export default shelter;

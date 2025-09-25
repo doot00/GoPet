@@ -1,9 +1,15 @@
+"use client";
+
+import { useToggleNav } from "../components/hooks/useToggleNav";
+import Header from "../components/main/Header";
+
 const cafe = () => {
-    return (
-        <div className="cafe">
-            <h1>cafe</h1>
-        </div>
-    )
-}
+  const { isNavOpen, toggleNav } = useToggleNav(false);
+  return (
+    <>
+      <Header isNavOpen={isNavOpen} toggleNav={toggleNav} />;
+    </>
+  );
+};
 
 export default cafe;
