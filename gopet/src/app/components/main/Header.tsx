@@ -1,18 +1,22 @@
-'use client'; // App Router 사용 중이라면 클라이언트 컴포넌트 선언 필요
-
+'use client';
+import { useState } from "react";
+import { FiMenu } from "react-icons/fi";
 import Link from "next/link";
 import Image from "next/image";
-import { FiMenu } from "react-icons/fi";
-import styles from "./Header.module.css";
 import ListSearch from "./ListSearch";
+import NavBar from "./NavBar";
 
 
 const Header = () => {
+  const [isNavOpen, setIsNavOpen] = useState(true);
+  const handleClick = () => {
+    setIsNavOpen((prev) => !prev);
+  }
   return (
-    <header className="header">
-      <div className="flex top-0 left-0 z-50 justify-between items-center">
+    <div className="grid grid-rows-1 grid-cols-1 gap4">
+      <div className="flex items-center">
         <Link href="/">
-          <div className="flex items-center m-5">
+          <div className="flex items-center">
             <Image
               src="/picture_images/logo.png"
               alt="고펫 로고"
@@ -23,10 +27,20 @@ const Header = () => {
             <h1 className="ml-5 text-3xl">고 펫</h1>
           </div>
         </Link>
-        <ListSearch/>
-        <FiMenu className="text-3xl m-5"/>
+        <div className="flex flex-grow justify-center m-5 items-center" >
+            <ListSearch />
+        </div>
       </div>
-    </header>
+      <div className="flex justify-end items-center">
+        <button onClick={handleClick}>
+          <FiMenu className="text-3xl m-5" />
+        </button>
+      </div>
+      <div className="col-span-2 p-4">
+        {isNavOpen && <NavBar />}
+      </div>
+    </div>
+    
   );
 };
 

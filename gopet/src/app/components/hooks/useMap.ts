@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import useSWR, { mutate } from 'swr';
-import type { Coordinates } from './store';
-import type { NaverMap } from './map';
+import type { Coordinates } from '../Map/types/store';
+import type { NaverMap } from '../Map/types/map';
 
 export const INITIAL_CENTER: Coordinates = [37.5262411, 126.99289439];
 export const INITIAL_ZOOM = 10;
@@ -24,8 +24,11 @@ const useMap = () => {
     const center: Coordinates = [mapCenter.lat(), mapCenter.lng()];
     const zoom = map.getZoom();
 
+
     return { center, zoom };
   }, [map]);
+
+
 
   return {
     initializeMap,

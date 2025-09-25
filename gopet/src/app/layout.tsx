@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import NavBar from "./components/main/NavBar";
 import Header from "./components/main/Header";
 import PageUpButton from "./components/main/PageUpButton";
-import LocalHotel from "./components/main/LocalHotel";
-import FestivalList from "./components/main/FestivalList";
-import Adopt from "./components/main/Adopt";
 import Footer from "./components/main/Footer";
 
 export const metadata: Metadata = {

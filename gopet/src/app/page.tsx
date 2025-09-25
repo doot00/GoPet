@@ -8,7 +8,6 @@ const Home = () => {
 
     return (
         <>
-            <NavBar />
             <FestivalList />
             <LocalHotel />
             <Adopt />

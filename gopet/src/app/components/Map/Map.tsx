@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import Script from "next/script";
 import type { Coordinates } from "./types/store";
 import { NaverMap } from "./types/map";
-import { INITIAL_CENTER, INITIAL_ZOOM } from "./types/useMap";
+import { INITIAL_CENTER, INITIAL_ZOOM } from "../hooks/useMap";
 
 type Props = {
   mapId?: string;
@@ -44,6 +44,8 @@ const Map = ({
       mapRef.current?.destroy();
     };
   }, []);
+
+
 
   return (
     <>
