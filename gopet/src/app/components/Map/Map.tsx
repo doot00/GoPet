@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Script from "next/script";
 import type { Coordinates } from "./types/store";
 import { NaverMap } from "./types/map";
@@ -13,6 +13,21 @@ type Props = {
 };
 
 
+// useEffect(() =>{
+//     const fetchData = async () => {
+//       try {
+//         const serviceKey = "CLUTURE_PUBLIC_MAP_API";
+//         const numOfRows = 10;
+//         const response = 
+//         await axios.get(`https://api.kcisa.kr/openapi/API_TOU_050/request?serviceKey=${encodeURIComponent(serviceKey)}&numOfRows=${numOfRows}`);
+//         setHospitals(response.data);
+//       } catch(e) {
+//         console.error(e);
+//       }
+//     };
+//     fetchData();
+//   },[]);
+
 const Map = ({
   mapId = "map",
   initialCenter = INITIAL_CENTER,
@@ -20,6 +35,11 @@ const Map = ({
   onLoad,
 }: Props) => {
   const mapRef = useRef<NaverMap | null>(null);
+
+  const [showSelter, setShowSelter] = useState(false);
+  const [selterMarkers, setSelterMarkers ] = useState<naver.maps.Marker[]>([]);
+  const [showHospital, setShowHospital] = useState(false);
+  const [hospitalMarkers, setHospitalMarkers ] = useState<naver.maps.Marker[]>([]);
 
   const handleCurrentLocationClick = () => {
     if (!mapRef.current) return;
@@ -40,11 +60,65 @@ const Map = ({
     }
   };
 
+  // selterlocation button
+  const handleSelterLocationClick = () => {
+    if (!mapRef.current) return;
+    if (showSelter) {
+      // 마커 제거
+      selterMarkers.forEach(marker => marker.setMap(null));
+      setSelterMarkers([]);
+      setShowSelter(false);
+    } else {
+    // 마커 생성
+    const newMarkers = selter.map(data => {
+      return new naver.maps.Marker({
+        position: new naver.maps.LatLng(Number(data.lat), Number(data.lng)),
+        map: mapRef.current!,
+        title: data.name,
+        icon: {
+          url: '/picture_images/map/selter_marker.png',
+          scaledSize: new naver.maps.Size(50, 50),
+          anchor: new naver.maps.Point(25, 25)
+        }
+      });
+    });
+    setSelterMarkers(newMarkers);
+    setShowSelter(true);
+  }
+      
+  }
+
+  // hospitallocation button 
+  const handleHospitalLocationClick = () => {
+    if(!mapRef.current) return;
+    if (showSelter) {
+      hospitalMarkers.forEach(marker => marker.setMap(null));
+      setHospitalMarkers([]);
+      setShowHospital(false);
+    } else {
+      const newMarkers = selter.map(data => {
+      return new naver.maps.Marker({
+        position: new naver.maps.LatLng(Number(data.lat), Number(data.lng)),
+        map: mapRef.current!,
+        title: data.name,
+        icon: {
+          url: '/picture_images/map/animalhospital_marker.png',
+          scaledSize: new naver.maps.Size(50, 50),
+          anchor: new naver.maps.Point(25, 25)
+        }
+      });
+    });
+    setSelterMarkers(newMarkers);
+    setShowSelter(true);
+    }
+  }
+  
+
   const initializeMap = () => {
     const mapOptions = {
       center: new window.naver.maps.LatLng(...initialCenter),
       zoom: initialZoom,
-      minZoom: 2,
+      minZoom: 6,
       scaleControl: false,
       mapDataControl: false,
       logoControlOptions: {
@@ -55,18 +129,11 @@ const Map = ({
     const map = new window.naver.maps.Map(mapId, mapOptions);
     mapRef.current = map;
 
-    selter.forEach((data) => {
-      new naver.maps.Marker({
-        position: new naver.maps.LatLng(Number(data.lat), Number(data.lng)),
-        map: map,
-        title: data.name,
-        icon: {
-          url:'/picture_images/map/selter_marker.png',
-          scaledSize: new naver.maps.Size(50, 50),
-          anchor: new naver.maps.Point(25, 25)
-        }
-      });
-    });
+    
+
+    
+
+    
     if (onLoad) {
       onLoad(map);
     }
@@ -96,6 +163,8 @@ const Map = ({
         >
           현재 위치
         </button>
+        <button className="flex justify-center items-center" onClick={handleSelterLocationClick} 
+        style={{ position: "absolute", top: 10, left:"10%", zIndex:999}}>보호소</button>
       </div>
     </>
   );

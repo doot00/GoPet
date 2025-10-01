@@ -11,7 +11,7 @@ type HeaderProps = {
 }
 
 
-const Header: React.FC<HeaderProps> = ({isNavOpen, toggleNav}) => {
+const Header: React.FC<HeaderProps> = ( {isNavOpen, toggleNav}) => {
   
   
   return (
