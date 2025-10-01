@@ -8,8 +8,13 @@ const hotel = () => {
   const { isNavOpen, toggleNav} = useToggleNav(false);
   return (
     <>
-      <Header isNavOpen={isNavOpen} toggleNav={toggleNav}/>;
-      <MapSection/>
+      <section>
+        <Header isNavOpen={isNavOpen} toggleNav={toggleNav}/>
+      </section>
+
+      <div style={{ width: "100%", height: "800px"}}>
+        <MapSection/>   
+      </div>
       
     </>
   );

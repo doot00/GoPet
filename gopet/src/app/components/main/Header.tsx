@@ -1,12 +1,10 @@
 'use client';
-import { useState } from "react";
+
 import { FiMenu } from "react-icons/fi";
 import Link from "next/link";
 import Image from "next/image";
 import ListSearch from "./ListSearch";
 import NavBar from "./NavBar";
-import { useToggleNav } from "../hooks/useToggleNav";
-
 type HeaderProps = {
   isNavOpen: boolean;
   toggleNav: () => void;
@@ -22,7 +20,7 @@ const Header: React.FC<HeaderProps> = ({isNavOpen, toggleNav}) => {
         <Link href="/">
           <div className="flex items-center">
             <Image
-              src="/picture_images/logo.png"
+              src="/picture_images/navmenu/logo.png"
               alt="고펫 로고"
               width={55}
               height={20}

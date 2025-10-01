@@ -27,7 +27,7 @@ const slideData: Slide[] = [
 export default function SwiperCarousel() {
     return (
         <div className='w-full'>
-            <h1 className="text-3xl mt-10">🏖️ 지역별 숙박</h1>
+            <h1 className="text-3xl p-10">🏖️ 지역별 숙박</h1>
             <Swiper modules={[Navigation, Pagination, Autoplay]}
                 spaceBetween={10}
                 slidesPerView={1}

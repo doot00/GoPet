@@ -10,7 +10,7 @@ const FestivalList = () => {
     return (
         <>
             <h1 className="text-3xl mt-10 p-10">🎉 이번달 축제 List</h1>
-            <div className='mb-40'>
+            <div className='mb-10'>
 
                 <Swiper
                     slidesPerView={2}
