@@ -25,9 +25,10 @@ const Map = ({
   const [selterMarkers, setSelterMarkers] = useState<naver.maps.Marker[]>([]);
   const [showHospital, setShowHospital] = useState(false);
   const [hospitalMarkers, setHospitalMarkers] = useState<naver.maps.Marker[]>([]);
-
   const [showCafe, setShowCafe] = useState(false);
   const [cafeMarkers, setCafeMarkers] = useState<naver.maps.Marker[]>([]);
+  const [showFood, setShowFood] = useState(false);
+  const [foodMarkers, setFoodMarkers] = useState<naver.maps.Marker[]>([]);
 
   // 현재 위치 버튼
   const handleCurrentLocationClick = () => {
@@ -127,13 +128,38 @@ const Map = ({
         });
       });
       setCafeMarkers(newMarkers);
+      setShowCafe(true);
     }
   };
 
   // 숙박 위치 버튼
 
   // 음식 위치 버튼
-
+  const handleFoodLocationClick = async () => {
+    if (!mapRef.current) return;
+    if (showFood) {
+      foodMarkers.forEach((marker) => marker.setMap(null));
+      setFoodMarkers([]);
+    } else {
+      const foods = await KcisaApi("식당");
+      
+      const firstFoods = foods.slice(0, 30);
+      const newMarkers = firstFoods.map((cafe: any) => {  
+        return new naver.maps.Marker({
+          position: new naver.maps.LatLng(cafe.lat, cafe.lng),
+          map: mapRef.current!,
+          title: cafe.title,
+          icon: {
+            url: "/picture_images/map/food_marker.png",
+            scaledSize: new naver.maps.Size(50, 50),
+            anchor: new naver.maps.Point(25, 25),
+          },
+        });
+      });
+      setFoodMarkers(newMarkers);
+      setShowFood(true);
+    }
+  };
   // 공원 위치 버튼
 
   // 체험은 생각해보기 ^^
@@ -211,6 +237,13 @@ const Map = ({
           style={{ position: "absolute", top: 10, left: "30%", zIndex: 999 }}
         >
           카페
+        </button>
+        <button
+          className="flex justify-center items-cnter"
+          onClick={handleFoodLocationClick}
+          style={{ position: "absolute", top: 10, left: "60%", zIndex: 999 }}
+        >
+          음식
         </button>
       </div>
     </>
