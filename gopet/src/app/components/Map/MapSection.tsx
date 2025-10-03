@@ -13,7 +13,7 @@ const MapSection = () => {
             <Map onLoad={onLoadMap}>
                 
             </Map>
-        </>
+        </> 
         // <Map onLoad={onLoadMap}/>
     )
     

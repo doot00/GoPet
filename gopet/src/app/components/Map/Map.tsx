@@ -24,9 +24,10 @@ const Map = ({
   const [showSelter, setShowSelter] = useState(false);
   const [selterMarkers, setSelterMarkers] = useState<naver.maps.Marker[]>([]);
   const [showHospital, setShowHospital] = useState(false);
-  const [hospitalMarkers, setHospitalMarkers] = useState<naver.maps.Marker[]>(
-    []
-  );
+  const [hospitalMarkers, setHospitalMarkers] = useState<naver.maps.Marker[]>([]);
+
+  const [showCafe, setShowCafe] = useState(false);
+  const [cafeMarkers, setCafeMarkers] = useState<naver.maps.Marker[]>([]);
 
   // 현재 위치 버튼
   const handleCurrentLocationClick = () => {
@@ -104,6 +105,30 @@ const Map = ({
   };
 
   // 카페 위치 버튼
+  const handleCafeLocationClick = async () => {
+    if (!mapRef.current) return;
+    if (showCafe) {
+      cafeMarkers.forEach((marker) => marker.setMap(null));
+      setCafeMarkers([]);
+    } else {
+      const cafes = await KcisaApi("카페");
+      
+      const firstCafes = cafes.slice(0, 30);
+      const newMarkers = firstCafes.map((cafe: any) => {  
+        return new naver.maps.Marker({
+          position: new naver.maps.LatLng(cafe.lat, cafe.lng),
+          map: mapRef.current!,
+          title: cafe.title,
+          icon: {
+            url: "/picture_images/map/cafe_marker.png",
+            scaledSize: new naver.maps.Size(50, 50),
+            anchor: new naver.maps.Point(25, 25),
+          },
+        });
+      });
+      setCafeMarkers(newMarkers);
+    }
+  };
 
   // 숙박 위치 버튼
 
@@ -179,6 +204,13 @@ const Map = ({
           style={{ position: "absolute", top: 10, left: "20%", zIndex: 999 }}
         >
           동물병원
+        </button>
+        <button
+          className="flex justify-center items-cnter"
+          onClick={handleCafeLocationClick}
+          style={{ position: "absolute", top: 10, left: "30%", zIndex: 999 }}
+        >
+          카페
         </button>
       </div>
     </>
