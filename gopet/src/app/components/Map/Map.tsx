@@ -4,6 +4,7 @@ import type { Coordinates } from "./types/store";
 import { NaverMap } from "./types/map";
 import { INITIAL_CENTER, INITIAL_ZOOM } from "../hooks/useMap";
 import selter from "../../../selter.json";
+import KcisaApi from "../../api/KcisaApi";
 
 type Props = {
   mapId?: string;
@@ -11,22 +12,6 @@ type Props = {
   initialZoom?: number;
   onLoad?: (map: NaverMap) => void;
 };
-
-
-// useEffect(() =>{
-//     const fetchData = async () => {
-//       try {
-//         const serviceKey = "CLUTURE_PUBLIC_MAP_API";
-//         const numOfRows = 10;
-//         const response = 
-//         await axios.get(`https://api.kcisa.kr/openapi/API_TOU_050/request?serviceKey=${encodeURIComponent(serviceKey)}&numOfRows=${numOfRows}`);
-//         setHospitals(response.data);
-//       } catch(e) {
-//         console.error(e);
-//       }
-//     };
-//     fetchData();
-//   },[]);
 
 const Map = ({
   mapId = "map",
@@ -37,10 +22,13 @@ const Map = ({
   const mapRef = useRef<NaverMap | null>(null);
 
   const [showSelter, setShowSelter] = useState(false);
-  const [selterMarkers, setSelterMarkers ] = useState<naver.maps.Marker[]>([]);
+  const [selterMarkers, setSelterMarkers] = useState<naver.maps.Marker[]>([]);
   const [showHospital, setShowHospital] = useState(false);
-  const [hospitalMarkers, setHospitalMarkers ] = useState<naver.maps.Marker[]>([]);
+  const [hospitalMarkers, setHospitalMarkers] = useState<naver.maps.Marker[]>(
+    []
+  );
 
+  // 현재 위치 버튼
   const handleCurrentLocationClick = () => {
     if (!mapRef.current) return;
 
@@ -60,59 +48,62 @@ const Map = ({
     }
   };
 
-  // selterlocation button
+  // 보호소 위치 버튼
   const handleSelterLocationClick = () => {
     if (!mapRef.current) return;
     if (showSelter) {
       // 마커 제거
-      selterMarkers.forEach(marker => marker.setMap(null));
+      selterMarkers.forEach((marker) => marker.setMap(null));
       setSelterMarkers([]);
       setShowSelter(false);
     } else {
-    // 마커 생성
-    const newMarkers = selter.map(data => {
-      return new naver.maps.Marker({
-        position: new naver.maps.LatLng(Number(data.lat), Number(data.lng)),
-        map: mapRef.current!,
-        title: data.name,
-        icon: {
-          url: '/picture_images/map/selter_marker.png',
-          scaledSize: new naver.maps.Size(50, 50),
-          anchor: new naver.maps.Point(25, 25)
-        }
+      // 마커 생성
+      const newMarkers = selter.map((data) => {
+        return new naver.maps.Marker({
+          position: new naver.maps.LatLng(Number(data.lat), Number(data.lng)),
+          map: mapRef.current!,
+          title: data.name,
+          icon: {
+            url: "/picture_images/map/selter_marker.png",
+            scaledSize: new naver.maps.Size(50, 50),
+            anchor: new naver.maps.Point(25, 25),
+          },
+        });
       });
-    });
-    setSelterMarkers(newMarkers);
-    setShowSelter(true);
-  }
-      
-  }
+      setSelterMarkers(newMarkers);
+      setShowSelter(true);
+    }
+  };
 
-  // hospitallocation button 
-  const handleHospitalLocationClick = () => {
-    if(!mapRef.current) return;
-    if (showSelter) {
-      hospitalMarkers.forEach(marker => marker.setMap(null));
+
+
+  // 동물병원 위치 버튼
+  const handleHospitalLocationClick = async () => {
+    if (!mapRef.current) return;
+    if (showHospital) {
+      hospitalMarkers.forEach((marker) => marker.setMap(null));
       setHospitalMarkers([]);
       setShowHospital(false);
     } else {
-      const newMarkers = selter.map(data => {
-      return new naver.maps.Marker({
-        position: new naver.maps.LatLng(Number(data.lat), Number(data.lng)),
-        map: mapRef.current!,
-        title: data.name,
-        icon: {
-          url: '/picture_images/map/animalhospital_marker.png',
-          scaledSize: new naver.maps.Size(50, 50),
-          anchor: new naver.maps.Point(25, 25)
-        }
+      const hospitals = await KcisaApi();
+      
+      const firstHospitals = hospitals.slice(0, 30);
+      const newMarkers = firstHospitals.map((hospital: any) => {  
+        return new naver.maps.Marker({
+          position: new naver.maps.LatLng(hospital.lat, hospital.lng),
+          map: mapRef.current!,
+          title: hospital.title,
+          icon: {
+            url: "/picture_images/map/animalhospital_marker.png",
+            scaledSize: new naver.maps.Size(50, 50),
+            anchor: new naver.maps.Point(25, 25),
+          },
+        });
       });
-    });
-    setSelterMarkers(newMarkers);
-    setShowSelter(true);
+      setHospitalMarkers(newMarkers);
+      setShowHospital(true);
     }
-  }
-  
+  };
 
   const initializeMap = () => {
     const mapOptions = {
@@ -125,15 +116,11 @@ const Map = ({
         position: naver.maps.Position.BOTTOM_RIGHT,
       },
     };
+    KcisaApi();
 
     const map = new window.naver.maps.Map(mapId, mapOptions);
     mapRef.current = map;
 
-    
-
-    
-
-    
     if (onLoad) {
       onLoad(map);
     }
@@ -159,12 +146,30 @@ const Map = ({
         <button
           className="flex justify-center items-center px-4 py-2 bg-white/60 rounded-2xl"
           onClick={handleCurrentLocationClick}
-          style={{ position: "absolute", top: 10, left:"50%", transform: "translateX(-50%)", zIndex: 999 }}
+          style={{
+            position: "absolute",
+            top: 10,
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 999,
+          }}
         >
           현재 위치
         </button>
-        <button className="flex justify-center items-center" onClick={handleSelterLocationClick} 
-        style={{ position: "absolute", top: 10, left:"10%", zIndex:999}}>보호소</button>
+        <button
+          className="flex justify-center items-center"
+          onClick={handleSelterLocationClick}
+          style={{ position: "absolute", top: 10, left: "10%", zIndex: 999 }}
+        >
+          보호소
+        </button>
+        <button
+          className="flex justify-center items-cnter"
+          onClick={handleHospitalLocationClick}
+          style={{ position: "absolute", top: 10, left: "20%", zIndex: 999 }}
+        >
+          동물병원
+        </button>
       </div>
     </>
   );

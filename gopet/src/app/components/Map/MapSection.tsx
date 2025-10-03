@@ -10,7 +10,9 @@ const MapSection = () => {
     }
     return (
         <>
-            <Map onLoad={onLoadMap}/>
+            <Map onLoad={onLoadMap}>
+                
+            </Map>
         </>
         // <Map onLoad={onLoadMap}/>
     )
