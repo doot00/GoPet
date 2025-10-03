@@ -75,8 +75,6 @@ const Map = ({
     }
   };
 
-
-
   // 동물병원 위치 버튼
   const handleHospitalLocationClick = async () => {
     if (!mapRef.current) return;
@@ -85,7 +83,7 @@ const Map = ({
       setHospitalMarkers([]);
       setShowHospital(false);
     } else {
-      const hospitals = await KcisaApi();
+      const hospitals = await KcisaApi("동물병원");
       
       const firstHospitals = hospitals.slice(0, 30);
       const newMarkers = firstHospitals.map((hospital: any) => {  
@@ -104,6 +102,18 @@ const Map = ({
       setShowHospital(true);
     }
   };
+
+  // 카페 위치 버튼
+
+  // 숙박 위치 버튼
+
+  // 음식 위치 버튼
+
+  // 공원 위치 버튼
+
+  // 체험은 생각해보기 ^^
+
+
 
   const initializeMap = () => {
     const mapOptions = {
