@@ -20,13 +20,24 @@ const Map = ({
   onLoad,
 }: Props) => {
   const mapRef = useRef<NaverMap | null>(null);
+  const [showHotel, setShowHotel] = useState(false);
+  const [hotelMarkers, setHotelMarkers] = useState<naver.maps.Marker[]>([]);
+  
+  // const [showActivity, setShowActivity] = useState(false);
+  // const [activityMarkers, setActivityMarkers] = useState<naver.maps.Marker[]>([]);
+  
+  const [showPark, setShowPark] = useState(false);
+  const [parkMarkers, setParkMarkers] = useState<naver.maps.Marker[]>([]);
 
   const [showSelter, setShowSelter] = useState(false);
   const [selterMarkers, setSelterMarkers] = useState<naver.maps.Marker[]>([]);
+
   const [showHospital, setShowHospital] = useState(false);
   const [hospitalMarkers, setHospitalMarkers] = useState<naver.maps.Marker[]>([]);
+
   const [showCafe, setShowCafe] = useState(false);
   const [cafeMarkers, setCafeMarkers] = useState<naver.maps.Marker[]>([]);
+
   const [showFood, setShowFood] = useState(false);
   const [foodMarkers, setFoodMarkers] = useState<naver.maps.Marker[]>([]);
 
@@ -133,6 +144,31 @@ const Map = ({
   };
 
   // 숙박 위치 버튼
+  const handleHotelLocationClick = async () => {
+    if (!mapRef.current) return;
+    if (showHotel) {
+      hotelMarkers.forEach((marker) => marker.setMap(null));
+      setHotelMarkers([]);
+    } else {
+      const hotels = await KcisaApi("펜션");
+      
+      const firstHotels = hotels.slice(0, 30);
+      const newMarkers = firstHotels.map((hotel: any) => {  
+        return new naver.maps.Marker({
+          position: new naver.maps.LatLng(hotel.lat, hotel.lng),
+          map: mapRef.current!,
+          title: hotel.title,
+          icon: {
+            url: "/picture_images/map/selter_marker.png",
+            scaledSize: new naver.maps.Size(50, 50),
+            anchor: new naver.maps.Point(25, 25),
+          },
+        });
+      });
+      setHotelMarkers(newMarkers);
+      setShowHotel(true);
+    }
+  };
 
   // 음식 위치 버튼
   const handleFoodLocationClick = async () => {
@@ -144,11 +180,11 @@ const Map = ({
       const foods = await KcisaApi("식당");
       
       const firstFoods = foods.slice(0, 30);
-      const newMarkers = firstFoods.map((cafe: any) => {  
+      const newMarkers = firstFoods.map((food: any) => {  
         return new naver.maps.Marker({
-          position: new naver.maps.LatLng(cafe.lat, cafe.lng),
+          position: new naver.maps.LatLng(food.lat, food.lng),
           map: mapRef.current!,
-          title: cafe.title,
+          title: food.title,
           icon: {
             url: "/picture_images/map/food_marker.png",
             scaledSize: new naver.maps.Size(50, 50),
@@ -161,9 +197,56 @@ const Map = ({
     }
   };
   // 공원 위치 버튼
+  const handleParkLocationClick = async () => {
+    if (!mapRef.current) return;
+    if (showPark) {
+      parkMarkers.forEach((marker) => marker.setMap(null));
+      setParkMarkers([]);
+    } else {
+      const parks = await KcisaApi("여행지");  
+      const firstParks = parks.slice(0, 30);
+      const newMarkers = firstParks.map((park: any) => {  
+        return new naver.maps.Marker({
+          position: new naver.maps.LatLng(park.lat, park.lng),
+          map: mapRef.current!,
+          title: park.title,
+          icon: {
+            url: "/picture_images/map/selter_marker.png",
+            scaledSize: new naver.maps.Size(50, 50),
+            anchor: new naver.maps.Point(25, 25),
+          },
+        });
+      });
+      setParkMarkers(newMarkers);
+      setShowPark(true);
+    }
+  };
 
-  // 체험은 생각해보기 ^^
-
+  // 체험
+  // const handleActivityLocationClick = async () => {
+  //   if (!mapRef.current) return;
+  //   if (showActivity) {
+  //     activityMarkers.forEach((marker) => marker.setMap(null));
+  //     setActivityMarkers([]);
+  //   } else {
+  //     const activities = await KcisaApi("");  
+  //     const firstActivities = activities.slice(0, 30);
+  //     const newMarkers = firstActivities.map((activity: any) => {  
+  //       return new naver.maps.Marker({
+  //         position: new naver.maps.LatLng(activity.lat, activity.lng),
+  //         map: mapRef.current!,
+  //         title: activity.title,
+  //         icon: {
+  //           url: "/picture_images/map/selter_marker.png",
+  //           scaledSize: new naver.maps.Size(50, 50),
+  //           anchor: new naver.maps.Point(25, 25),
+  //         },
+  //       });
+  //     });
+  //     setParkMarkers(newMarkers);
+  //     setShowPark(true);
+  //   }
+  // };
 
 
   const initializeMap = () => {
@@ -245,6 +328,27 @@ const Map = ({
         >
           음식
         </button>
+        <button
+          className="flex justify-center items-cnter"
+          onClick={handleHotelLocationClick}
+          style={{ position: "absolute", top: 10, left: "70%", zIndex: 999 }}
+        >
+          호텔
+        </button>
+        <button
+          className="flex justify-center items-cnter"
+          onClick={handleParkLocationClick}
+          style={{ position: "absolute", top: 10, left: "80%", zIndex: 999 }}
+        >
+          공원
+        </button>
+        {/* <button
+          className="flex justify-center items-cnter"
+          onClick={handleActivityLocationClick}
+          style={{ position: "absolute", top: 10, left: "90%", zIndex: 999 }}
+        >
+          체험
+        </button> */}
       </div>
     </>
   );
