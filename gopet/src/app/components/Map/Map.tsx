@@ -1,36 +1,45 @@
+"use client";
+
 import React, { useEffect, useState, useRef } from "react";
 import Script from "next/script";
-import type { Coordinates } from "./types/store";
+import { Coordinates } from "./types/store";
 import { NaverMap } from "./types/map";
 import { INITIAL_CENTER, INITIAL_ZOOM } from "../hooks/useMap";
 import selter from "../../../selter.json";
 import KcisaApi from "../../api/KcisaApi";
+
+declare global {
+  interface Window {
+    naver: any;
+  }
+}
 
 type Props = {
   mapId?: string;
   initialCenter?: Coordinates;
   initialZoom?: number;
   onLoad?: (map: NaverMap) => void;
+  searchQuery?: string;
 };
+
+// 버튼 컴포넌트 따로 리펙토링..... 벗 너무 구리다 프로젝트가 ㅠ 구리귈..구리구리..넘 구리해 샤하고 빵한걸로좀 하고싶다
 
 const Map = ({
   mapId = "map",
-  initialCenter = INITIAL_CENTER,
-  initialZoom = INITIAL_ZOOM,
-  onLoad,
+  initialCenter: Coordinates,
+  initialZoom: number,
 }: Props) => {
-  const mapRef = useRef<NaverMap | null>(null);
+  const mapRef = useRef<naver.maps.Map | null>(null);
+
   const [showHotel, setShowHotel] = useState(false);
   const [hotelMarkers, setHotelMarkers] = useState<naver.maps.Marker[]>([]);
   
-  // const [showActivity, setShowActivity] = useState(false);
-  // const [activityMarkers, setActivityMarkers] = useState<naver.maps.Marker[]>([]);
-  
   const [showPark, setShowPark] = useState(false);
   const [parkMarkers, setParkMarkers] = useState<naver.maps.Marker[]>([]);
-
+  
   const [showSelter, setShowSelter] = useState(false);
   const [selterMarkers, setSelterMarkers] = useState<naver.maps.Marker[]>([]);
+  
 
   const [showHospital, setShowHospital] = useState(false);
   const [hospitalMarkers, setHospitalMarkers] = useState<naver.maps.Marker[]>([]);
@@ -72,7 +81,7 @@ const Map = ({
     } else {
       // 마커 생성
       const newMarkers = selter.map((data) => {
-        return new naver.maps.Marker({
+        return new window.naver.maps.Marker({
           position: new naver.maps.LatLng(Number(data.lat), Number(data.lng)),
           map: mapRef.current!,
           title: data.name,
@@ -159,7 +168,7 @@ const Map = ({
           map: mapRef.current!,
           title: hotel.title,
           icon: {
-            url: "/picture_images/map/selter_marker.png",
+            url: "/picture_images/map/hotel_marker.png",
             scaledSize: new naver.maps.Size(50, 50),
             anchor: new naver.maps.Point(25, 25),
           },
@@ -196,6 +205,7 @@ const Map = ({
       setShowFood(true);
     }
   };
+
   // 공원 위치 버튼
   const handleParkLocationClick = async () => {
     if (!mapRef.current) return;
@@ -211,7 +221,7 @@ const Map = ({
           map: mapRef.current!,
           title: park.title,
           icon: {
-            url: "/picture_images/map/selter_marker.png",
+            url: "/picture_images/map/park_marker.png",
             scaledSize: new naver.maps.Size(50, 50),
             anchor: new naver.maps.Point(25, 25),
           },
@@ -220,61 +230,37 @@ const Map = ({
       setParkMarkers(newMarkers);
       setShowPark(true);
     }
+  }
+    
+
+
+const initializeMap = () => {
+      const mapOptions = {
+        center: new window.naver.maps.LatLng(...INITIAL_CENTER),
+        zoom: INITIAL_ZOOM,
+        minZoom: 6,
+        scaleControl: false,
+        mapDataControl: false,
+        logoControlOptions: {
+          position: naver.maps.Position.BOTTOM_RIGHT,
+        },
+      };
+      const map = new window.naver.maps.Map(mapId, mapOptions);
+      map.setCursor("pointer");
+      mapRef.current = map;
+      
+      // InfoWindow
+      const InfoWindow = new window.naver.maps.InfoWindow({
+        content: "<div>안녕</div>",
+        anchorSkew: true,
+      });
+
+      window.naver.maps.Event.addListener(map, "click", (e: any) => {
+        InfoWindow.setContent(`<div>좌표: ${e.coord.x}, ${e.coord.y}</div>`);
+        InfoWindow.open(map, e.coord);
+      });
+      KcisaApi();
   };
-
-  // 체험
-  // const handleActivityLocationClick = async () => {
-  //   if (!mapRef.current) return;
-  //   if (showActivity) {
-  //     activityMarkers.forEach((marker) => marker.setMap(null));
-  //     setActivityMarkers([]);
-  //   } else {
-  //     const activities = await KcisaApi("");  
-  //     const firstActivities = activities.slice(0, 30);
-  //     const newMarkers = firstActivities.map((activity: any) => {  
-  //       return new naver.maps.Marker({
-  //         position: new naver.maps.LatLng(activity.lat, activity.lng),
-  //         map: mapRef.current!,
-  //         title: activity.title,
-  //         icon: {
-  //           url: "/picture_images/map/selter_marker.png",
-  //           scaledSize: new naver.maps.Size(50, 50),
-  //           anchor: new naver.maps.Point(25, 25),
-  //         },
-  //       });
-  //     });
-  //     setParkMarkers(newMarkers);
-  //     setShowPark(true);
-  //   }
-  // };
-
-
-  const initializeMap = () => {
-    const mapOptions = {
-      center: new window.naver.maps.LatLng(...initialCenter),
-      zoom: initialZoom,
-      minZoom: 6,
-      scaleControl: false,
-      mapDataControl: false,
-      logoControlOptions: {
-        position: naver.maps.Position.BOTTOM_RIGHT,
-      },
-    };
-    KcisaApi();
-
-    const map = new window.naver.maps.Map(mapId, mapOptions);
-    mapRef.current = map;
-
-    if (onLoad) {
-      onLoad(map);
-    }
-  };
-
-  useEffect(() => {
-    return () => {
-      mapRef.current?.destroy();
-    };
-  }, []);
 
   return (
     <>
@@ -333,7 +319,7 @@ const Map = ({
           onClick={handleHotelLocationClick}
           style={{ position: "absolute", top: 10, left: "70%", zIndex: 999 }}
         >
-          호텔
+          숙박
         </button>
         <button
           className="flex justify-center items-cnter"
@@ -342,13 +328,6 @@ const Map = ({
         >
           공원
         </button>
-        {/* <button
-          className="flex justify-center items-cnter"
-          onClick={handleActivityLocationClick}
-          style={{ position: "absolute", top: 10, left: "90%", zIndex: 999 }}
-        >
-          체험
-        </button> */}
       </div>
     </>
   );

@@ -6,35 +6,37 @@ import { Pagination } from "swiper/modules";
 const Adopt = () => {
   return (
     <>
-      <h1 className="text-3xl">🐶 유기견 입양</h1>
+      <h1 className="text-3xl mt-10 p-10">🐶 유기견 입양</h1>
       <Swiper
-        slidesPerView={5}
-        spaceBetween={10}
-        slidesPerGroup={5}
+        slidesPerView={4}
+        spaceBetween={20}
+        slidesPerGroup={4}
         pagination={{
           clickable: true,
         }}
         breakpoints={{
           640: {
-            slidesPerView: 2,
+            slidesPerView: 4,
             spaceBetween: 20,
           },
           768: {
-            slidesPerView: 3,
+            slidesPerView: 4,
             spaceBetween: 20,
           },
           1024: {
-            slidesPerView: 5,
+            slidesPerView: 4,
             spaceBetween: 20,
           },
         }}
         modules={[Pagination]}
-        className="mySwiper"
+        className="my-swiper"
       >
         <SwiperSlide>
           <button
-            className="flex flex-col w-[600px] h-[300px] m-5 p-10 bg-black rounded-3xl opacity-90"
+            className="flex flex-col m-5 bg-black rounded-3xl opacity-90"
             style={{
+              width: '350px',
+              height: '400px',
               backgroundImage: `url(${"/picture_images/festivallist/festival1.jpg"})`,
             }}
           >
@@ -43,8 +45,10 @@ const Adopt = () => {
         </SwiperSlide>
         <SwiperSlide>
           <button
-            className="flex flex-col w-[600px] h-[300px] m-5 p-10 bg-black rounded-3xl opacity-90"
+            className="flex flex-col m-5 bg-black rounded-3xl opacity-90"
             style={{
+              width: '350px',
+              height: '400px',
               backgroundImage: `url(${"/picture_images/festivallist/festival2.jpg"})`,
             }}
           >
@@ -53,8 +57,10 @@ const Adopt = () => {
         </SwiperSlide>
         <SwiperSlide>
           <button
-            className="flex flex-col w-[600px] h-[300px] m-5 p-10 bg-black rounded-3xl opacity-90"
+            className="flex flex-col m-5 bg-black rounded-3xl opacity-90"
             style={{
+              width: '400px',
+              height: '400px',
               backgroundImage: `url(${"/picture_images/festivallist/festival3.png"})`,
             }}
           >
@@ -63,8 +69,10 @@ const Adopt = () => {
         </SwiperSlide>
         <SwiperSlide>
           <button
-            className="flex flex-col w-[600px] h-[300px] m-5 p-10 bg-black rounded-3xl opacity-90"
+            className="flex flex-col m-5 bg-black rounded-3xl opacity-90"
             style={{
+              width: '400px',
+              height: '400px',
               backgroundImage: `url(${"/picture_images/festivallist/festival4.jpg"})`,
             }}
           >
@@ -73,8 +81,10 @@ const Adopt = () => {
         </SwiperSlide>
         <SwiperSlide>
           <button
-            className="flex flex-col w-[600px] h-[300px] m-5 p-10 bg-black rounded-3xl opacity-90"
+            className="flex flex-col m-5 bg-black rounded-3xl opacity-90"
             style={{
+              width: '400px',
+              height: '400px',
               backgroundImage: `url(${"/picture_images/festivallist/festival5.png"})`,
             }}
           >

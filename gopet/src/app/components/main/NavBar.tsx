@@ -31,11 +31,11 @@ const NavBar: React.FC = () => {
           <h2 className={styles.nav_font}>공 원</h2>
         </div>
       </Link>
-      <Link href="/experience" className="w-1/5 min-w-[100px]">
+      <Link href="/adoption" className="w-1/5 min-w-[100px]">
         <div className={styles.nav_box}>
-          <Image src="/picture_images/navmenu/activity.png" alt="체험 아이콘" width={110} height={20} className="border-10
+          <Image src="/picture_images/navmenu/adopt.png" alt="체험 아이콘" width={110} height={20} className="border-10
           "/>
-          <h2 className={styles.nav_font}>체 험</h2>
+          <h2 className={styles.nav_font}>유기견입양</h2>
         </div>
       </Link>
       <Link href="/shelter" className="w-1/5 min-w-[100px]">

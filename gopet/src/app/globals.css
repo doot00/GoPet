@@ -4,8 +4,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
-
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -36,10 +34,33 @@ body {
     color: black;
 }
 
+.swiper-pagination {
+  bottom: -50px;
+}
+
 .swiper-pagination-bullet-active {
   background-color: black;
 }
 
+.swiper-wrapper  {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 1200px;
+}
+
 .swiper-slide {
   margin-right: 0px;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 650px;
 }
+
+.swiper-slide img {
+  display: block;
+  width: 650px;
+  height: 100%;
+  object-fit: cover;
+} 

@@ -10,8 +10,8 @@ const Home = () => {
     return (
         <>
             <Header isNavOpen={isNavOpen} toggleNav={toggleNav}/>
-            <FestivalList />
             <LocalHotel />
+            <FestivalList />
             <Adopt />
         </>
     )

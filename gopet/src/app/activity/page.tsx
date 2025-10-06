@@ -3,7 +3,7 @@
 import { useToggleNav } from "../components/hooks/useToggleNav";
 import Header from "../components/main/Header";
 
-const experience = () => {
+const Activity = () => {
   const { isNavOpen, toggleNav } = useToggleNav(false);
   return (
     <>
@@ -12,4 +12,4 @@ const experience = () => {
   );
 };
 
-export default experience;
+export default Activity;
