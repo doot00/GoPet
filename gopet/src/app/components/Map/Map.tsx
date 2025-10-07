@@ -7,6 +7,7 @@ import { NaverMap } from "./types/map";
 import { INITIAL_CENTER, INITIAL_ZOOM } from "../hooks/useMap";
 import selter from "../../../selter.json";
 import KcisaApi from "../../api/KcisaApi";
+import useMap from "../hooks/useMap";
 
 declare global {
   interface Window {
@@ -20,6 +21,8 @@ type Props = {
   initialZoom?: number;
   onLoad?: (map: NaverMap) => void;
   searchQuery?: string;
+  address?: string;
+  orders?: string;
 };
 
 // 버튼 컴포넌트 따로 리펙토링..... 벗 너무 구리다 프로젝트가 ㅠ 구리귈..구리구리..넘 구리해 샤하고 빵한걸로좀 하고싶다
@@ -30,19 +33,25 @@ const Map = ({
   initialZoom: number,
 }: Props) => {
   const mapRef = useRef<naver.maps.Map | null>(null);
+  const infoRaf = useRef<naver.maps.InfoWindow | null>(null);
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
+    null
+  );
+  const [address, setAddress] = useState("");
 
   const [showHotel, setShowHotel] = useState(false);
   const [hotelMarkers, setHotelMarkers] = useState<naver.maps.Marker[]>([]);
-  
+
   const [showPark, setShowPark] = useState(false);
   const [parkMarkers, setParkMarkers] = useState<naver.maps.Marker[]>([]);
-  
+
   const [showSelter, setShowSelter] = useState(false);
   const [selterMarkers, setSelterMarkers] = useState<naver.maps.Marker[]>([]);
-  
 
   const [showHospital, setShowHospital] = useState(false);
-  const [hospitalMarkers, setHospitalMarkers] = useState<naver.maps.Marker[]>([]);
+  const [hospitalMarkers, setHospitalMarkers] = useState<naver.maps.Marker[]>(
+    []
+  );
 
   const [showCafe, setShowCafe] = useState(false);
   const [cafeMarkers, setCafeMarkers] = useState<naver.maps.Marker[]>([]);
@@ -106,9 +115,9 @@ const Map = ({
       setShowHospital(false);
     } else {
       const hospitals = await KcisaApi("동물병원");
-      
+
       const firstHospitals = hospitals.slice(0, 30);
-      const newMarkers = firstHospitals.map((hospital: any) => {  
+      const newMarkers = firstHospitals.map((hospital: any) => {
         return new naver.maps.Marker({
           position: new naver.maps.LatLng(hospital.lat, hospital.lng),
           map: mapRef.current!,
@@ -133,9 +142,9 @@ const Map = ({
       setCafeMarkers([]);
     } else {
       const cafes = await KcisaApi("카페");
-      
+
       const firstCafes = cafes.slice(0, 30);
-      const newMarkers = firstCafes.map((cafe: any) => {  
+      const newMarkers = firstCafes.map((cafe: any) => {
         return new naver.maps.Marker({
           position: new naver.maps.LatLng(cafe.lat, cafe.lng),
           map: mapRef.current!,
@@ -160,9 +169,9 @@ const Map = ({
       setHotelMarkers([]);
     } else {
       const hotels = await KcisaApi("펜션");
-      
+
       const firstHotels = hotels.slice(0, 30);
-      const newMarkers = firstHotels.map((hotel: any) => {  
+      const newMarkers = firstHotels.map((hotel: any) => {
         return new naver.maps.Marker({
           position: new naver.maps.LatLng(hotel.lat, hotel.lng),
           map: mapRef.current!,
@@ -187,9 +196,9 @@ const Map = ({
       setFoodMarkers([]);
     } else {
       const foods = await KcisaApi("식당");
-      
+
       const firstFoods = foods.slice(0, 30);
-      const newMarkers = firstFoods.map((food: any) => {  
+      const newMarkers = firstFoods.map((food: any) => {
         return new naver.maps.Marker({
           position: new naver.maps.LatLng(food.lat, food.lng),
           map: mapRef.current!,
@@ -213,9 +222,9 @@ const Map = ({
       parkMarkers.forEach((marker) => marker.setMap(null));
       setParkMarkers([]);
     } else {
-      const parks = await KcisaApi("여행지");  
+      const parks = await KcisaApi("여행지");
       const firstParks = parks.slice(0, 30);
-      const newMarkers = firstParks.map((park: any) => {  
+      const newMarkers = firstParks.map((park: any) => {
         return new naver.maps.Marker({
           position: new naver.maps.LatLng(park.lat, park.lng),
           map: mapRef.current!,
@@ -230,43 +239,150 @@ const Map = ({
       setParkMarkers(newMarkers);
       setShowPark(true);
     }
-  }
-    
+  };
 
+  // 지도 초기화
+  const initializeMap = () => {
+    const mapOptions = {
+      center: new window.naver.maps.LatLng(...INITIAL_CENTER),
+      zoom: INITIAL_ZOOM,
+      minZoom: 6,
+      scaleControl: false,
+      mapDataControl: false,
+      logoControlOptions: {
+        position: naver.maps.Position.BOTTOM_RIGHT,
+      },
+    };
+    // 지도 Id, options
+    const map = new window.naver.maps.Map(mapId, mapOptions);
+    map.setCursor("pointer");
+    mapRef.current = map;
+    infoRaf.current = new naver.maps.InfoWindow({ content: "" });
 
-const initializeMap = () => {
-      const mapOptions = {
-        center: new window.naver.maps.LatLng(...INITIAL_CENTER),
-        zoom: INITIAL_ZOOM,
-        minZoom: 6,
-        scaleControl: false,
-        mapDataControl: false,
-        logoControlOptions: {
-          position: naver.maps.Position.BOTTOM_RIGHT,
+    // 좌표값 가져오기
+
+    // 지도 클릭 시 마커 이동 및 좌표 표시
+    map.addListener("click", (e: any) => {
+      // InfoWindow.setContent(`<div>좌표: ${e.coord.x}, ${e.coord.y}</div>`);
+      // InfoWindow.open(map, e.coord); // listener에서 받아온 좌표, 클릭한 지점
+      const latlng = e.coord;
+      setCoords({ lat: latlng.y, lng: latlng.x });
+      searchCoordinateToAddress(latlng);
+    });
+
+    // 주소를 좌표로 변환
+    function searchAddressToCoordinate(address: any) {
+      naver.maps.Service.geocode(
+        {
+          query: address,
         },
-      };
-      const map = new window.naver.maps.Map(mapId, mapOptions);
-      map.setCursor("pointer");
-      mapRef.current = map;
-      
-      // InfoWindow
-      const InfoWindow = new window.naver.maps.InfoWindow({
-        content: "<div>안녕</div>",
-        anchorSkew: true,
-      });
+        function (status, response) {
+          if (status === naver.maps.Service.Status.ERROR) {
+            return alert("Something Wrong!");
+          }
 
-      window.naver.maps.Event.addListener(map, "click", (e: any) => {
-        InfoWindow.setContent(`<div>좌표: ${e.coord.x}, ${e.coord.y}</div>`);
-        InfoWindow.open(map, e.coord);
-      });
-      KcisaApi();
+          if (response.v2.meta.totalCount === 0) {
+            return alert("주소를 찾을 수 없습니다.");
+          }
+
+          const htmlAddresses = [],
+            item = response.v2.addresses[0],
+            point = new naver.maps.LatLng(
+              parseFloat(item.x),
+              parseFloat(item.y)
+            );
+
+          mapRef.current?.setCenter(point);
+
+          if (item.roadAddress) {
+            htmlAddresses.push("[도로명 주소] " + item.roadAddress);
+          }
+
+          if (item.jibunAddress) {
+            htmlAddresses.push("[지번 주소] " + item.jibunAddress);
+          }
+
+          if (item.englishAddress) {
+            htmlAddresses.push("[영문명 주소] " + item.englishAddress);
+          }
+          // infoWindow 내용
+          infoRaf.current?.setContent(`
+            <div style="padding:10px;min-width:200px;line-height:150%;">
+              <h4 style="margin-top:5px;">검색 주소: ${address}</h4><br />
+              ${htmlAddresses.join("<br />")}
+            </div>
+          `);
+
+          infoRaf.current?.open(mapRef.current!, point);
+        }
+      );
+    }
+
+    // 좌표를 주소로 변환
+    function searchCoordinateToAddress(latlng: naver.maps.LatLng) {
+      naver.maps.Service.reverseGeocode(
+        {
+          coords: latlng,
+          orders: [naver.maps.Service.OrderType.ADDR, naver.maps.Service.OrderType.ROAD_ADDR].join(','),
+        },
+        function (status, response) {
+          console.log("reverseGeocode ", status, response);
+          
+          if (status === naver.maps.Service.Status.ERROR) {
+            return alert("Something Wrong!");
+          }
+          
+          console.log('Geocode reponse:', response);
+          
+          const items =
+        response?.v2?.results ||
+        response?.result?.items ||
+        [];
+
+          const htmlAddresses: string[] = [];
+
+          // makeAddress
+          for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            const address =
+              item.region.area1.name +
+              " " +
+              item.region.area2.name +
+              " " +
+              item.region.area3.name +
+              " " +
+              item.region.area4.name +
+              (item.land.number1 ? " " + item.land.number1 : "") +
+              (item.land.number2 ? "-" + item.land.number2 : "") +
+              (item.land.addition0?.value
+                ? " " + item.land.addition0.value
+                : "");
+
+            const addrType =
+              item.name === "roadaddr" ? "[도로명 주소]" : "[지번 주소]";
+
+            htmlAddresses.push(`${i + 1}. ${addrType} ${address}`);
+          }
+
+          infoRaf.current?.setContent(`
+              <div style="padding:10px;min-width:200px;line-height:150%;">
+              <h4 style="margin-top:5px;">검색 좌표</h4><br />'
+              ${htmlAddresses.join("<br />")}
+              </div>
+          `);
+          infoRaf.current?.open(mapRef.current!, latlng);
+        }
+      );
+    }
+
+    KcisaApi();
   };
 
   return (
     <>
       <Script
         strategy="afterInteractive"
-        src={`https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID}`}
+        src={`https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID}&submodules=geocoder`}
         onReady={initializeMap}
       />
       <div
@@ -328,6 +444,13 @@ const initializeMap = () => {
         >
           공원
         </button>
+        <input
+          type="text"
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+        />
+
+
       </div>
     </>
   );
