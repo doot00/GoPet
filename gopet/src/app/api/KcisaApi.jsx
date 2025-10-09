@@ -19,11 +19,16 @@ const KcisaApi = async(categoryFilter) => {
           })
         .map((item) => {
           const coord = item.coordinates;
-          if (typeof coord !== "string") return null;
+          if (typeof coord !== "string") {
+            return null;
+          }
 
+          
           // 공백으로 나눠서 파싱
           const parts = coord.split(" ");
-          if (parts.length < 2) return null;
+          if (parts.length < 2) {
+            return null;
+          }
           // N/E 제거하고 숫자만 추출
           const lat = parseFloat(parts[0].replace(/[^\d.-]/g, ""));
           const lng = parseFloat(parts[1].replace(/[^\d.-]/g, ""));

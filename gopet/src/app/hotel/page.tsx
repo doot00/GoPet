@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useToggleNav } from "../components/hooks/useToggleNav";
 import Header from "../components/main/Header";
@@ -8,11 +8,8 @@ const hotel = () => {
   const { isNavOpen, toggleNav} = useToggleNav(false);
   return (
     <>
-      <section>
-        <Header isNavOpen={isNavOpen} toggleNav={toggleNav}/>
-      </section>
-
-      <div style={{ width: "100%", height: "800px"}}>
+      <Header isNavOpen={isNavOpen} toggleNav={toggleNav}/>
+      <div style={{ width: "100%", height: "950px"}}>
         <MapSection/>   
       </div>
       
@@ -21,3 +18,4 @@ const hotel = () => {
 };
 
 export default hotel;
+ 

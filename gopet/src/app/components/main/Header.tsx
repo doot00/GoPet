@@ -12,10 +12,8 @@ type HeaderProps = {
 
 
 const Header: React.FC<HeaderProps> = ( {isNavOpen, toggleNav}) => {
-  
-  
   return (
-    <div className="grid grid-rows-1 grid-cols-1 gap4">
+    <div className="grid grid-rows-1 grid-cols-1 gap-4">
       <div className="flex items-center">
         <Link href="/">
           <div className="flex items-center">

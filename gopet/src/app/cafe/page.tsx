@@ -5,15 +5,14 @@ import Header from "../components/main/Header";
 import MapSection from "../components/Map/MapSection";
 
 const cafe = () => {
-  const { isNavOpen, toggleNav } = useToggleNav(false);
+  const { isNavOpen, toggleNav} = useToggleNav(false);
   return (
     <>
-    <section>
-      <Header isNavOpen={isNavOpen} toggleNav={toggleNav} />
-    </section>
-    <div style={{ width: "100%", height: "500px"}}>
-      <MapSection/>
-    </div>
+      <Header isNavOpen={isNavOpen} toggleNav={toggleNav}/>
+      <div style={{ width: "100%", height: "950px"}}>
+        <MapSection/>   
+      </div>
+      
     </>
   );
 };
