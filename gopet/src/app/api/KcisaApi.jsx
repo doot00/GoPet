@@ -11,7 +11,6 @@ const KcisaApi = async(categoryFilter) => {
       console.log(data);
       
       const items = data.response?.body?.items?.item || [];
-
       const result = items
         .filter((item) => {
           if (categoryFilter && item.category2 !== categoryFilter) return false;
@@ -22,8 +21,10 @@ const KcisaApi = async(categoryFilter) => {
           if (typeof coord !== "string") {
             return null;
           }
-
-          
+          const tel = item.tel;
+          if(typeof tel !== "string"){
+            return null;
+          }
           // 공백으로 나눠서 파싱
           const parts = coord.split(" ");
           if (parts.length < 2) {
@@ -32,8 +33,9 @@ const KcisaApi = async(categoryFilter) => {
           // N/E 제거하고 숫자만 추출
           const lat = parseFloat(parts[0].replace(/[^\d.-]/g, ""));
           const lng = parseFloat(parts[1].replace(/[^\d.-]/g, ""));
-        
+          
           if (isNaN(lat) || isNaN(lng)) return null;
+          
           return {
             title: item.title,
             lat,

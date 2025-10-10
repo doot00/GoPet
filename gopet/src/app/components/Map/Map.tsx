@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useState, useRef } from "react";
 import Script from "next/script";
 import { Coordinates } from "./types/store";
 import { NaverMap } from "./types/map";
 import { INITIAL_CENTER, INITIAL_ZOOM } from "../hooks/useMap";
-import selter from "../../../selter.json";
+import shelter from "../../../shelter.json";
 import KcisaApi from "../../api/KcisaApi";
 import styles from "./Map.module.css";
 
@@ -25,8 +25,6 @@ type Props = {
   orders?: string;
 };
 
-// 버튼 컴포넌트 따로 리펙토링..... 벗 너무 구리다 프로젝트가 ㅠ 구리귈..구리구리..넘 구리해 샤하고 빵한걸로좀 하고싶다
-
 const Map = ({
   mapId = "map",
   initialCenter: Coordinates,
@@ -42,8 +40,8 @@ const Map = ({
   const [showPark, setShowPark] = useState(false);
   const [parkMarkers, setParkMarkers] = useState<naver.maps.Marker[]>([]);
 
-  const [showSelter, setShowSelter] = useState(false);
-  const [selterMarkers, setSelterMarkers] = useState<naver.maps.Marker[]>([]);
+  const [showShelter, setShowShelter] = useState(false);
+  const [shelterMarkers, setShelterMarkers] = useState<naver.maps.Marker[]>([]);
 
   const [showHospital, setShowHospital] = useState(false);
   const [hospitalMarkers, setHospitalMarkers] = useState<naver.maps.Marker[]>(
@@ -77,15 +75,15 @@ const Map = ({
   };
 
   // 보호소 위치 버튼
-  const handleSelterLocationClick = () => {
-    if (showSelter) {
+  const handleShelterLocationClick = () => {
+    if (showShelter) {
       // 마커 제거
-      selterMarkers.forEach((marker) => marker.setMap(null));
-      setSelterMarkers([]);
-      setShowSelter(false);
+      shelterMarkers.forEach((marker) => marker.setMap(null));
+      setShelterMarkers([]);
+      setShowShelter(false);
     } else {
       // 마커 생성
-      const newMarkers = selter.map((data) => {
+      const newMarkers = shelter.map((data) => {
         const marker = new window.naver.maps.Marker({
           position: new naver.maps.LatLng(Number(data.lat), Number(data.lng)),
           map: mapRef.current!,
@@ -93,7 +91,7 @@ const Map = ({
           phone: data.phone,
           title: data.name,
           icon: {
-            url: "/picture_images/map/selter_marker.png",
+            url: "/picture_images/map/shelter_marker.png",
             scaledSize: new naver.maps.Size(50, 50),
             anchor: new naver.maps.Point(25, 25),
           },
@@ -104,22 +102,32 @@ const Map = ({
           const modal = document.getElementById("modal");
           const modalContent = document.getElementById("modalContent");
           const modalLatlng = document.getElementById("modalLatlng");
+          const modalRegion = document.getElementById("modalRegion");
+          const modalPhone = document.getElementById("modalPhone");
           const latlng = marker.getPosition(); // LatLng 객체
           searchCoordinateToAddress(latlng, data.name);
 
-          if (modal && modalContent && modalLatlng) {
+          if (
+            modal &&
+            modalContent &&
+            modalLatlng &&
+            modalRegion &&
+            modalPhone
+          ) {
             modal.classList.remove("hidden");
             modalContent.innerHTML = data.name;
+            modalRegion.innerHTML = data.region;
+            modalPhone.innerHTML = data.phone;
           }
-
         });
-        // setCoords({ lat: data.lat, lng: data.lng }); // 원하면 유지
         return marker;
       });
-      setSelterMarkers(newMarkers);
-      setShowSelter(true);
+      setShelterMarkers(newMarkers);
+      setShowShelter(true);
     }
   };
+
+
 
   // 동물병원 위치 버튼
   const handleHospitalLocationClick = async () => {
@@ -136,22 +144,29 @@ const Map = ({
           position: new naver.maps.LatLng(hospital.lat, hospital.lng),
           map: mapRef.current!,
           title: hospital.title,
+          city: hospital.city,
+          tel: hospital.phone,
           icon: {
             url: "/picture_images/map/animalhospital_marker.png",
             scaledSize: new naver.maps.Size(50, 50),
             anchor: new naver.maps.Point(25, 25),
           },
-        });
+        } as any);
 
         naver.maps.Event.addListener(marker, "click", (e: any) => {
           const latlng = new naver.maps.LatLng(hospital.lat, hospital.lng);
           const modal = document.getElementById("modal");
+          const modalCity = document.getElementById("modalCity");
           const modalContent = document.getElementById("modalContent");
+          const modalPhone = document.getElementById("modalPhone");
+
           searchCoordinateToAddress(latlng, hospital.title);
 
-          if (modal && modalContent && latlng) {
+          if (modal && modalContent && modalPhone && modalCity) {
             modal.classList.remove("hidden");
             modalContent.innerHTML = hospital.title;
+            modalCity.innerHTML = hospital.city;
+            modalPhone.innerHTML = hospital.tel;
           }
         });
         return marker;
@@ -176,21 +191,28 @@ const Map = ({
           position: new naver.maps.LatLng(cafe.lat, cafe.lng),
           map: mapRef.current!,
           title: cafe.title,
+          city: cafe.city,
+          tel: cafe.tel,
           icon: {
             url: "/picture_images/map/cafe_marker.png",
             scaledSize: new naver.maps.Size(50, 50),
             anchor: new naver.maps.Point(25, 25),
           },
-        });
+        }as any);
         naver.maps.Event.addListener(marker, "click", (e: any) => {
           const latlng = new naver.maps.LatLng(cafe.lat, cafe.lng);
           const modal = document.getElementById("modal");
+          const modalCity = document.getElementById("modalCity");
           const modalContent = document.getElementById("modalContent");
+          const modalPhone = document.getElementById("modalPhone");
+
           searchCoordinateToAddress(latlng, cafe.title);
 
-          if (modal && modalContent && latlng) {
+          if (modal && modalContent && latlng && modalCity && modalPhone) {
             modal.classList.remove("hidden");
             modalContent.innerHTML = cafe.title;
+            modalCity.innerHTML = cafe
+            modalPhone.innerHTML = cafe.tel;
           }
         });
         return marker;
@@ -215,21 +237,29 @@ const Map = ({
           position: new naver.maps.LatLng(hotel.lat, hotel.lng),
           map: mapRef.current!,
           title: hotel.title,
+          city: hotel.city,
+          tel: hotel.tel,
           icon: {
             url: "/picture_images/map/hotel_marker.png",
             scaledSize: new naver.maps.Size(50, 50),
             anchor: new naver.maps.Point(25, 25),
           },
-        });
+        } as any);
         naver.maps.Event.addListener(marker, "click", (e: any) => {
           const latlng = new naver.maps.LatLng(hotel.lat, hotel.lng);
           const modal = document.getElementById("modal");
+          const modalCity = document.getElementById("modalCity");
           const modalContent = document.getElementById("modalContent");
+          const modalPhone = document.getElementById("modalPhone");
+
+
           searchCoordinateToAddress(latlng, hotel.title);
 
-          if (modal && modalContent && latlng) {
+          if (modal && modalContent && latlng && modalCity && modalPhone) {
             modal.classList.remove("hidden");
             modalContent.innerHTML = hotel.title;
+            modalCity.innerHTML = hotel.city;
+            modalPhone.innerHTML = hotel.tel;
           }
         });
         return marker;
@@ -254,21 +284,27 @@ const Map = ({
           position: new naver.maps.LatLng(food.lat, food.lng),
           map: mapRef.current!,
           title: food.title,
+          city: food.city,
+          tel: food.tel,
           icon: {
             url: "/picture_images/map/food_marker.png",
             scaledSize: new naver.maps.Size(50, 50),
             anchor: new naver.maps.Point(25, 25),
           },
-        });
+        } as any);
         naver.maps.Event.addListener(marker, "click", (e: any) => {
           const latlng = new naver.maps.LatLng(food.lat, food.lng);
           const modal = document.getElementById("modal");
           const modalContent = document.getElementById("modalContent");
+          const modalCity = document.getElementById("modalCity");
+          const modalPhone = document.getElementById("modalPhone");
           searchCoordinateToAddress(latlng, food.title);
 
-          if (modal && modalContent && latlng) {
+          if (modal && modalContent && latlng && modalCity && modalPhone) {
             modal.classList.remove("hidden");
             modalContent.innerHTML = food.title;
+            modalCity.innerHTML = food.city;
+            modalPhone.innerHTML = food.tel;
           }
         });
         return marker;
@@ -294,22 +330,30 @@ const Map = ({
           position: new naver.maps.LatLng(park.lat, park.lng),
           map: mapRef.current!,
           title: park.title,
+          city: park.city,
+          tel: park.tel,
           icon: {
             url: "/picture_images/map/park_marker.png",
             scaledSize: new naver.maps.Size(50, 50),
             anchor: new naver.maps.Point(25, 25),
           },
-        });
+        } as any);
 
         naver.maps.Event.addListener(marker, "click", (e: any) => {
           const latlng = new naver.maps.LatLng(park.lat, park.lng);
           const modal = document.getElementById("modal");
           const modalContent = document.getElementById("modalContent");
+          const modalCity = document.getElementById("modalCity");
+          const modalPhone = document.getElementById("modalPhone");
+
           searchCoordinateToAddress(latlng, park.title);
 
-          if (modal && modalContent && latlng) {
+          if (modal && modalContent && latlng && modalCity && modalPhone) {
             modal.classList.remove("hidden");
             modalContent.innerHTML = park.title;
+            modalContent.innerHTML = park.title;
+            modalCity.innerHTML = park.city;
+            modalPhone.innerHTML = park.tel;
           }
         });
         return marker;
@@ -322,7 +366,7 @@ const Map = ({
   // 좌표 -> 주소 변환
   function searchCoordinateToAddress(
     latlng: naver.maps.LatLng,
-    title?: string
+    title?: string,
   ) {
     naver.maps.Service.reverseGeocode(
       {
@@ -339,36 +383,37 @@ const Map = ({
 
         const items = response?.v2?.results || response?.result?.items || [];
         const htmlAddresses: string[] = [];
-        
+        const cityName = items[0].region.area1.name;
+    
         // makeAddress
         for (let i = 0; i < items.length; i++) {
           const item = items[i];
           const address =
-          item.region.area1.name +
-          " " +
-          item.region.area2.name +
-          " " +
-          item.region.area3.name +
-          " " +
-          item.region.area4.name +
-          (item.land.number1 ? " " + item.land.number1 : "") +
-          (item.land.number2 ? "-" + item.land.number2 : "") +
-          (item.land.addition0?.value ? " " + item.land.addition0.value : "");
-          
-          const name = item.name;
+            item.region.area1.name +
+            " " +
+            item.region.area2.name +
+            " " +
+            item.region.area3.name +
+            " " +
+            item.region.area4.name +
+            (item.land.number1 ? " " + item.land.number1 : "") +
+            (item.land.number2 ? "-" + item.land.number2 : "") +
+            (item.land.addition0?.value ? " " + item.land.addition0.value : "");
+
           const addrType =
-          item.name === "roadaddr" ? "[도로명 주소]" : "[지번 주소]";
-          
+            item.name === "roadaddr" ? "[도로명 주소]" : "[지번 주소]";
+
           htmlAddresses.push(`${i + 1}. ${addrType} ${address}`);
         }
         const modalContent = document.getElementById("modalContent");
         const modalLatlng = document.getElementById("modalLatlng");
-
+        const modalCity = document.getElementById("modalCity");
         const allAddress = htmlAddresses.join("<br/>");
+
         if (modalContent) modalContent.innerHTML = `${title}`;
-        if (modalLatlng)
-          modalLatlng.innerHTML = `${allAddress}`;
-        
+        if (modalLatlng) modalLatlng.innerHTML = `${allAddress}`;
+        if (modalCity) modalCity.innerHTML = cityName;
+
         const contentHtml = `
         <div style="position:relative;padding:10px;min-width:200px;min-height:100px;line-height:140%;font-size:12px;">
         <h2>${title || "정보없음"}</h2>
@@ -408,52 +453,52 @@ const Map = ({
     });
 
     // 주소를 좌표로 변환
-    function searchAddressToCoordinate(address: any) {
-      naver.maps.Service.geocode(
-        {
-          query: address,
-        },
-        function (status, response) {
-          if (status === naver.maps.Service.Status.ERROR) {
-            return alert("Something Wrong!");
-          }
+    // function searchAddressToCoordinate(address: any) {
+    //   naver.maps.Service.geocode(
+    //     {
+    //       query: address,
+    //     },
+    //     function (status, response) {
+    //       if (status === naver.maps.Service.Status.ERROR) {
+    //         return alert("Something Wrong!");
+    //       }
 
-          if (response.v2.meta.totalCount === 0) {
-            return alert("주소를 찾을 수 없습니다.");
-          }
+    //       if (response.v2.meta.totalCount === 0) {
+    //         return alert("주소를 찾을 수 없습니다.");
+    //       }
 
-          const htmlAddresses = [],
-            item = response.v2.addresses[0],
-            point = new naver.maps.LatLng(
-              parseFloat(item.x),
-              parseFloat(item.y)
-            );
+    //       const htmlAddresses = [],
+    //         item = response.v2.addresses[0],
+    //         point = new naver.maps.LatLng(
+    //           parseFloat(item.x),
+    //           parseFloat(item.y)
+    //         );
 
-          mapRef.current?.setCenter(point);
+    //       mapRef.current?.setCenter(point);
 
-          if (item.roadAddress) {
-            htmlAddresses.push("[도로명 주소] " + item.roadAddress);
-          }
+    //       if (item.roadAddress) {
+    //         htmlAddresses.push("[도로명 주소] " + item.roadAddress);
+    //       }
 
-          if (item.jibunAddress) {
-            htmlAddresses.push("[지번 주소] " + item.jibunAddress);
-          }
+    //       if (item.jibunAddress) {
+    //         htmlAddresses.push("[지번 주소] " + item.jibunAddress);
+    //       }
 
-          if (item.englishAddress) {
-            htmlAddresses.push("[영문명 주소] " + item.englishAddress);
-          }
-          // infoWindow 내용
-          infoRaf.current?.setContent(`
-            <div style="padding:10px;min-width:200px;line-height:150%;">
-              <h4 style="margin-top:5px;">검색 주소: ${address}</h4><br />
-              ${htmlAddresses.join("<br />")}
-            </div>
-          `);
+    //       if (item.englishAddress) {
+    //         htmlAddresses.push("[영문명 주소] " + item.englishAddress);
+    //       }
+    //       // infoWindow 내용
+    //       infoRaf.current?.setContent(`
+    //         <div style="padding:10px;min-width:200px;line-height:150%;">
+    //           <h4 style="margin-top:5px;">검색 주소: ${address}</h4><br />
+    //           ${htmlAddresses.join("<br />")}
+    //         </div>
+    //       `);
 
-          infoRaf.current?.open(mapRef.current!, point);
-        }
-      );
-    }
+    //       infoRaf.current?.open(mapRef.current!, point);
+    //     }
+    //   );
+    // }
 
     KcisaApi();
   };
@@ -490,7 +535,7 @@ const Map = ({
         </button>
         <button
           className="flex justify-center items-center"
-          onClick={handleSelterLocationClick}
+          onClick={handleShelterLocationClick}
           style={{ position: "absolute", top: 10, left: "10%", zIndex: 999 }}
         >
           보호소
@@ -539,11 +584,31 @@ const Map = ({
         <div id="modal" className={styles.modal}>
           <div className={styles.modal_content}>
             <p id="modalContent" className="text-xl font-bold" />
-            <p id="modalLatlng" className="text-black" />
+            <p id="modalCity" />
+            <p id="modalLatlng" />
+            <p id="modalPhone" />
             <button
               className="m-5 px-5 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
               onClick={() => {
                 const modal = document.getElementById("modal");
+                if (modal) modal.classList.add("hidden");
+              }}
+            >
+              닫기
+            </button>
+          </div>
+        </div>
+        {/* 모달  */}
+        <div id="modal2" className={styles.modal}>
+          <div className={styles.modal_content}>
+            <p id="modalContent" className="text-xl font-bold" />
+            <p id="modalRegion" />
+            <p id="modalLatlng" />
+            <p id="modalPhone" />
+            <button
+              className="m-5 px-5 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              onClick={() => {
+                const modal = document.getElementById("modal2");
                 if (modal) modal.classList.add("hidden");
               }}
             >
