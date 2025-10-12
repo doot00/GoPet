@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Script from "next/script";
 import { Coordinates } from "./types/store";
 import { NaverMap } from "./types/map";
-import { INITIAL_CENTER, INITIAL_ZOOM } from "../hooks/useMap";
+import useMap, { INITIAL_CENTER, INITIAL_ZOOM } from "../hooks/useMap";
 import shelter from "../../../shelter.json";
 import KcisaApi from "../../api/KcisaApi";
 import styles from "./Map.module.css";
@@ -24,6 +24,7 @@ type Props = {
   address?: string;
   orders?: string;
 };
+
 
 const Map = ({
   mapId = "map",
@@ -53,7 +54,7 @@ const Map = ({
 
   const [showFood, setShowFood] = useState(false);
   const [foodMarkers, setFoodMarkers] = useState<naver.maps.Marker[]>([]);
-
+  const [clickedList, setClickedList] = useState<any[]>([]);
   // 현재 위치 버튼
   const handleCurrentLocationClick = () => {
     if (!mapRef.current) return;
@@ -324,7 +325,7 @@ const Map = ({
     } else {
       const parks = await KcisaApi("여행지");
       const firstParks = parks.slice(0, 30);
-
+      
       const newMarkers = firstParks.map((park: any) => {
         const marker = new naver.maps.Marker({
           position: new naver.maps.LatLng(park.lat, park.lng),
@@ -339,21 +340,18 @@ const Map = ({
           },
         } as any);
 
-        naver.maps.Event.addListener(marker, "click", (e: any) => {
+        naver.maps.Event.addListener(marker, "click", () => {
           const latlng = new naver.maps.LatLng(park.lat, park.lng);
           const modal = document.getElementById("modal");
           const modalContent = document.getElementById("modalContent");
           const modalCity = document.getElementById("modalCity");
           const modalPhone = document.getElementById("modalPhone");
-
           searchCoordinateToAddress(latlng, park.title);
 
           if (modal && modalContent && latlng && modalCity && modalPhone) {
-            modal.classList.remove("hidden");
             modalContent.innerHTML = park.title;
-            modalContent.innerHTML = park.title;
-            modalCity.innerHTML = park.city;
             modalPhone.innerHTML = park.tel;
+            modal.classList.remove("hidden");
           }
         });
         return marker;
@@ -363,12 +361,11 @@ const Map = ({
     }
   };
 
-  // 좌표 -> 주소 변환
-  function searchCoordinateToAddress(
-    latlng: naver.maps.LatLng,
-    title?: string,
-  ) {
-    naver.maps.Service.reverseGeocode(
+  // 좌표 -> 주소 변환 비동기적으로 호출
+function searchCoordinateToAddress(
+  latlng: naver.maps.LatLng,
+  title?: string,
+){naver.maps.Service.reverseGeocode(
       {
         coords: latlng,
         orders: [
@@ -378,14 +375,14 @@ const Map = ({
       },
       function (status, response) {
         if (status === naver.maps.Service.Status.ERROR) {
-          return alert("Something Wrong!");
+          alert("Something Wrong!");
+          return;
         }
 
         const items = response?.v2?.results || response?.result?.items || [];
         const htmlAddresses: string[] = [];
         const cityName = items[0].region.area1.name;
-    
-        // makeAddress
+
         for (let i = 0; i < items.length; i++) {
           const item = items[i];
           const address =
@@ -402,9 +399,9 @@ const Map = ({
 
           const addrType =
             item.name === "roadaddr" ? "[도로명 주소]" : "[지번 주소]";
-
           htmlAddresses.push(`${i + 1}. ${addrType} ${address}`);
         }
+
         const modalContent = document.getElementById("modalContent");
         const modalLatlng = document.getElementById("modalLatlng");
         const modalCity = document.getElementById("modalCity");
@@ -416,12 +413,13 @@ const Map = ({
 
         const contentHtml = `
         <div style="position:relative;padding:10px;min-width:200px;min-height:100px;line-height:140%;font-size:12px;">
-        <h2>${title || "정보없음"}</h2>
-              ${htmlAddresses.join("<br />")}
-              </div>
-          `;
+          <h2>${title || "정보없음"}</h2>
+          ${htmlAddresses.join("<br />")}
+        </div>
+        `;
         infoRaf.current?.setContent(contentHtml);
         infoRaf.current?.open(mapRef.current!, latlng);
+
       }
     );
   }
@@ -437,11 +435,13 @@ const Map = ({
       logoControlOptions: {
         position: naver.maps.Position.BOTTOM_RIGHT,
       },
-    };
+    }
     // 지도 Id, options
     const map = new window.naver.maps.Map(mapId, mapOptions);
     map.setCursor("pointer");
     mapRef.current = map;
+
+
 
     infoRaf.current = new naver.maps.InfoWindow({
       content: "",
@@ -452,53 +452,53 @@ const Map = ({
       pixelOffset: new naver.maps.Point(5, -25),
     });
 
-    // 주소를 좌표로 변환
-    // function searchAddressToCoordinate(address: any) {
-    //   naver.maps.Service.geocode(
-    //     {
-    //       query: address,
-    //     },
-    //     function (status, response) {
-    //       if (status === naver.maps.Service.Status.ERROR) {
-    //         return alert("Something Wrong!");
-    //       }
+    //주소를 좌표로 변환
+    function searchAddressToCoordinate(address: any) {
+      naver.maps.Service.geocode(
+        {
+          query: address,
+        },
+        function (status, response) {
+          if (status === naver.maps.Service.Status.ERROR) {
+            return alert("Something Wrong!");
+          }
 
-    //       if (response.v2.meta.totalCount === 0) {
-    //         return alert("주소를 찾을 수 없습니다.");
-    //       }
+          if (response.v2.meta.totalCount === 0) {
+            return alert("주소를 찾을 수 없습니다.");
+          }
 
-    //       const htmlAddresses = [],
-    //         item = response.v2.addresses[0],
-    //         point = new naver.maps.LatLng(
-    //           parseFloat(item.x),
-    //           parseFloat(item.y)
-    //         );
+          const htmlAddresses = [],
+            item = response.v2.addresses[0],
+            point = new naver.maps.LatLng(
+              parseFloat(item.x),
+              parseFloat(item.y)
+            );
 
-    //       mapRef.current?.setCenter(point);
+          mapRef.current?.setCenter(point);
 
-    //       if (item.roadAddress) {
-    //         htmlAddresses.push("[도로명 주소] " + item.roadAddress);
-    //       }
+          if (item.roadAddress) {
+            htmlAddresses.push("[도로명 주소] " + item.roadAddress);
+          }
 
-    //       if (item.jibunAddress) {
-    //         htmlAddresses.push("[지번 주소] " + item.jibunAddress);
-    //       }
+          if (item.jibunAddress) {
+            htmlAddresses.push("[지번 주소] " + item.jibunAddress);
+          }
 
-    //       if (item.englishAddress) {
-    //         htmlAddresses.push("[영문명 주소] " + item.englishAddress);
-    //       }
-    //       // infoWindow 내용
-    //       infoRaf.current?.setContent(`
-    //         <div style="padding:10px;min-width:200px;line-height:150%;">
-    //           <h4 style="margin-top:5px;">검색 주소: ${address}</h4><br />
-    //           ${htmlAddresses.join("<br />")}
-    //         </div>
-    //       `);
+          if (item.englishAddress) {
+            htmlAddresses.push("[영문명 주소] " + item.englishAddress);
+          }
+          // infoWindow 내용
+          infoRaf.current?.setContent(`
+            <div style="padding:10px;min-width:200px;line-height:150%;">
+              <h4 style="margin-top:5px;">검색 주소: ${address}</h4><br />
+              ${htmlAddresses.join("<br />")}
+            </div>
+          `);
 
-    //       infoRaf.current?.open(mapRef.current!, point);
-    //     }
-    //   );
-    // }
+          infoRaf.current?.open(mapRef.current!, point);
+        }
+      );
+    }
 
     KcisaApi();
   };
@@ -599,7 +599,7 @@ const Map = ({
           </div>
         </div>
         {/* 모달  */}
-        <div id="modal2" className={styles.modal}>
+        {/* <div id="modal2" className={styles.modal}>
           <div className={styles.modal_content}>
             <p id="modalContent" className="text-xl font-bold" />
             <p id="modalRegion" />
@@ -615,7 +615,7 @@ const Map = ({
               닫기
             </button>
           </div>
-        </div>
+        </div> */}
       </div>
     </>
   );

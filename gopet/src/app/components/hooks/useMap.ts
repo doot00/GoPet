@@ -30,42 +30,30 @@ const useMap = () => {
 
   const address = await new Promise<string>((resolve, reject) => {
     const latlng = new naver.maps.LatLng(center[0], center[1]);
-    naver.maps.Service.reverseGeocode(
+    window.naver.maps.Service.reverseGeocode(
       {
         coords: latlng,
         orders: [
-          naver.maps.Service.OrderType.ADDR,
-          naver.maps.Service.OrderType.ROAD_ADDR,
+          window.naver.maps.Service.OrderType.ADDR,
+          window.naver.maps.Service.OrderType.ROAD_ADDR,
         ].join(','),
       },
       (status: any, response: any) => {
-        if (status === naver.maps.Service.Status.ERROR) {
-          return alert("Something Wrong!");
+        if (status !== window.naver.maps.Service.Status.OK) {
+          reject(new Error('Reverse geocoding failed'));
+          return;
         }
 
-        const items = response.v2.results || response?.result?.items || [];
-        const htmlAddresses: string[] = [];
-        const cityName = items[0].region.area1.name;
-
-        for (let i = 0; i < items.length; i++) {
-          const item = items[i];
-          const address =
-            item.region.area1.name +
-            " " +
-            item.region.area2.name +
-            " " +
-            item.region.area3.name +
-            " " +
-            item.region.area4.name +
-            (item.land.number1 ? " " + item.land.number1 : "") +
-            (item.land.number2 ? "-" + item.land.number2 : "") +
-            (item.land.addition0?.value ? " " + item.land.addition0.value : "");
-
-          const addrType =
-            item.name === "roadaddr" ? "[도로명 주소]" : "[지번 주소]";
-
-          htmlAddresses.push(`${i + 1}. ${addrType} ${address}`);
+        const items = response.v2.results;
+        if (!items || items.length === 0) {
+          resolve('주소 정보 없음');
+          return;
         }
+        const item = items[0];
+        const address =
+          `${item.region.area1.name} ${item.region.area2.name} ${item.region.area3.name}` +
+          (item.land?.number1 ? ` ${item.land.number1}` : '');
+
         resolve(address);
       }
     );
