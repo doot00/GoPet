@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import Script from "next/script";
 import { Coordinates } from "./types/store";
 import { NaverMap } from "./types/map";
-import useMap, { INITIAL_CENTER, INITIAL_ZOOM } from "../hooks/useMap";
+import useMap, { INITIAL_CENTER, INITIAL_ZOOM} from "../hooks/useMap";
 import shelter from "../../../shelter.json";
 import KcisaApi from "../../api/KcisaApi";
 import styles from "./Map.module.css";
@@ -25,16 +25,26 @@ type Props = {
   orders?: string;
 };
 
-
 const Map = ({
   mapId = "map",
-  initialCenter: Coordinates,
-  initialZoom: number,
+  initialCenter = {...INITIAL_CENTER},
+  initialZoom = 10,
 }: Props) => {
   const mapRef = useRef<naver.maps.Map | null>(null);
   const infoRaf = useRef<naver.maps.InfoWindow | null>(null);
+  const markerRef = useRef<naver.maps.Marker[]>([]);
 
-  const [address, setAddress] = useState("");
+  // 모달
+  const [modalData, setModalData] = useState<null | {
+    type: "hospital" | "shelter" | "cafe" | "food" | "hotel" | "park";
+    title: string;
+    address?: string;
+    region?: string;
+    city?: string;
+    phone: string;
+  }>(null);
+
+  // marker 버튼
   const [showHotel, setShowHotel] = useState(false);
   const [hotelMarkers, setHotelMarkers] = useState<naver.maps.Marker[]>([]);
 
@@ -54,7 +64,7 @@ const Map = ({
 
   const [showFood, setShowFood] = useState(false);
   const [foodMarkers, setFoodMarkers] = useState<naver.maps.Marker[]>([]);
-  const [clickedList, setClickedList] = useState<any[]>([]);
+
   // 현재 위치 버튼
   const handleCurrentLocationClick = () => {
     if (!mapRef.current) return;
@@ -75,13 +85,14 @@ const Map = ({
     }
   };
 
-  // 보호소 위치 버튼
+  // 보호소 위치 버튼 예외 내부 json 호출
   const handleShelterLocationClick = () => {
     if (showShelter) {
       // 마커 제거
       shelterMarkers.forEach((marker) => marker.setMap(null));
       setShelterMarkers([]);
       setShowShelter(false);
+      setModalData(null);
     } else {
       // 마커 생성
       const newMarkers = shelter.map((data) => {
@@ -91,35 +102,28 @@ const Map = ({
           region: data.region,
           phone: data.phone,
           title: data.name,
+          address: data.address,
           icon: {
             url: "/picture_images/map/shelter_marker.png",
             scaledSize: new naver.maps.Size(50, 50),
             anchor: new naver.maps.Point(25, 25),
           },
         });
-        // Marker클릭 시에만 주소창을 열도록
-        naver.maps.Event.addListener(marker, "click", () => {
-          // 마커의 정보를 모달로 표시
-          const modal = document.getElementById("modal");
-          const modalContent = document.getElementById("modalContent");
-          const modalLatlng = document.getElementById("modalLatlng");
-          const modalRegion = document.getElementById("modalRegion");
-          const modalPhone = document.getElementById("modalPhone");
-          const latlng = marker.getPosition(); // LatLng 객체
-          searchCoordinateToAddress(latlng, data.name);
+        // marker 클릭시 아니라 그냥 주소창을띄울 수 있도록
 
-          if (
-            modal &&
-            modalContent &&
-            modalLatlng &&
-            modalRegion &&
-            modalPhone
-          ) {
-            modal.classList.remove("hidden");
-            modalContent.innerHTML = data.name;
-            modalRegion.innerHTML = data.region;
-            modalPhone.innerHTML = data.phone;
-          }
+        naver.maps.Event.addListener(marker, "click", () => {
+          const latlng = new naver.maps.LatLng(
+            Number(data.lat),
+            Number(data.lng)
+          );
+          searchCoordinateToAddress(latlng, data.name);
+          setModalData({
+            type: "shelter",
+            title: data.name,
+            region: data.region,
+            address: data.address,
+            phone: data.phone,
+          });
         });
         return marker;
       });
@@ -127,8 +131,6 @@ const Map = ({
       setShowShelter(true);
     }
   };
-
-
 
   // 동물병원 위치 버튼
   const handleHospitalLocationClick = async () => {
@@ -139,13 +141,11 @@ const Map = ({
       setShowHospital(false);
     } else {
       const hospitals = await KcisaApi("동물병원");
-      const firstHospitals = hospitals.slice(0, 30);
-      const newMarkers = firstHospitals.map((hospital: any) => {
+      const newMarkers = filtered.map((hospital: any) => {
         const marker = new naver.maps.Marker({
           position: new naver.maps.LatLng(hospital.lat, hospital.lng),
           map: mapRef.current!,
           title: hospital.title,
-          city: hospital.city,
           tel: hospital.phone,
           icon: {
             url: "/picture_images/map/animalhospital_marker.png",
@@ -154,21 +154,19 @@ const Map = ({
           },
         } as any);
 
-        naver.maps.Event.addListener(marker, "click", (e: any) => {
+        naver.maps.Event.addListener(marker, "click", async () => {
           const latlng = new naver.maps.LatLng(hospital.lat, hospital.lng);
-          const modal = document.getElementById("modal");
-          const modalCity = document.getElementById("modalCity");
-          const modalContent = document.getElementById("modalContent");
-          const modalPhone = document.getElementById("modalPhone");
-
-          searchCoordinateToAddress(latlng, hospital.title);
-
-          if (modal && modalContent && modalPhone && modalCity) {
-            modal.classList.remove("hidden");
-            modalContent.innerHTML = hospital.title;
-            modalCity.innerHTML = hospital.city;
-            modalPhone.innerHTML = hospital.tel;
-          }
+          const { address, cityName } = await searchCoordinateToAddress(
+            latlng,
+            hospital.title
+          );
+          setModalData({
+            type: "hospital",
+            title: hospital.title,
+            region: cityName,
+            address: address,
+            phone: hospital.tel,
+          });
         });
         return marker;
       });
@@ -185,36 +183,32 @@ const Map = ({
       setCafeMarkers([]);
     } else {
       const cafes = await KcisaApi("카페");
-
       const firstCafes = cafes.slice(0, 30);
       const newMarkers = firstCafes.map((cafe: any) => {
         const marker = new naver.maps.Marker({
           position: new naver.maps.LatLng(cafe.lat, cafe.lng),
           map: mapRef.current!,
           title: cafe.title,
-          city: cafe.city,
           tel: cafe.tel,
           icon: {
             url: "/picture_images/map/cafe_marker.png",
             scaledSize: new naver.maps.Size(50, 50),
             anchor: new naver.maps.Point(25, 25),
           },
-        }as any);
-        naver.maps.Event.addListener(marker, "click", (e: any) => {
+        } as any);
+        naver.maps.Event.addListener(marker, "click", async () => {
           const latlng = new naver.maps.LatLng(cafe.lat, cafe.lng);
-          const modal = document.getElementById("modal");
-          const modalCity = document.getElementById("modalCity");
-          const modalContent = document.getElementById("modalContent");
-          const modalPhone = document.getElementById("modalPhone");
-
-          searchCoordinateToAddress(latlng, cafe.title);
-
-          if (modal && modalContent && latlng && modalCity && modalPhone) {
-            modal.classList.remove("hidden");
-            modalContent.innerHTML = cafe.title;
-            modalCity.innerHTML = cafe
-            modalPhone.innerHTML = cafe.tel;
-          }
+          const { address, cityName } = await searchCoordinateToAddress(
+            latlng,
+            cafe.title
+          );
+          setModalData({
+            type: "cafe",
+            title: cafe.title,
+            region: cityName,
+            address: address,
+            phone: cafe.tel,
+          });
         });
         return marker;
       });
@@ -238,7 +232,6 @@ const Map = ({
           position: new naver.maps.LatLng(hotel.lat, hotel.lng),
           map: mapRef.current!,
           title: hotel.title,
-          city: hotel.city,
           tel: hotel.tel,
           icon: {
             url: "/picture_images/map/hotel_marker.png",
@@ -246,22 +239,19 @@ const Map = ({
             anchor: new naver.maps.Point(25, 25),
           },
         } as any);
-        naver.maps.Event.addListener(marker, "click", (e: any) => {
+        naver.maps.Event.addListener(marker, "click", async () => {
           const latlng = new naver.maps.LatLng(hotel.lat, hotel.lng);
-          const modal = document.getElementById("modal");
-          const modalCity = document.getElementById("modalCity");
-          const modalContent = document.getElementById("modalContent");
-          const modalPhone = document.getElementById("modalPhone");
-
-
-          searchCoordinateToAddress(latlng, hotel.title);
-
-          if (modal && modalContent && latlng && modalCity && modalPhone) {
-            modal.classList.remove("hidden");
-            modalContent.innerHTML = hotel.title;
-            modalCity.innerHTML = hotel.city;
-            modalPhone.innerHTML = hotel.tel;
-          }
+          const { address, cityName } = await searchCoordinateToAddress(
+            latlng,
+            hotel.title
+          );
+          setModalData({
+            type: "hotel",
+            title: hotel.title,
+            region: cityName,
+            address: address,
+            phone: hotel.tel,
+          });
         });
         return marker;
       });
@@ -279,7 +269,6 @@ const Map = ({
     } else {
       const foods = await KcisaApi("식당");
       const firstFoods = foods.slice(0, 30);
-
       const newMarkers = firstFoods.map((food: any) => {
         const marker = new naver.maps.Marker({
           position: new naver.maps.LatLng(food.lat, food.lng),
@@ -293,20 +282,19 @@ const Map = ({
             anchor: new naver.maps.Point(25, 25),
           },
         } as any);
-        naver.maps.Event.addListener(marker, "click", (e: any) => {
+        naver.maps.Event.addListener(marker, "click", async () => {
           const latlng = new naver.maps.LatLng(food.lat, food.lng);
-          const modal = document.getElementById("modal");
-          const modalContent = document.getElementById("modalContent");
-          const modalCity = document.getElementById("modalCity");
-          const modalPhone = document.getElementById("modalPhone");
-          searchCoordinateToAddress(latlng, food.title);
-
-          if (modal && modalContent && latlng && modalCity && modalPhone) {
-            modal.classList.remove("hidden");
-            modalContent.innerHTML = food.title;
-            modalCity.innerHTML = food.city;
-            modalPhone.innerHTML = food.tel;
-          }
+          const { address, cityName } = await searchCoordinateToAddress(
+            latlng,
+            food.title
+          );
+          setModalData({
+            type: "food",
+            title: food.title,
+            region: cityName,
+            address: address,
+            phone: food.tel,
+          });
         });
         return marker;
       });
@@ -325,7 +313,7 @@ const Map = ({
     } else {
       const parks = await KcisaApi("여행지");
       const firstParks = parks.slice(0, 30);
-      
+
       const newMarkers = firstParks.map((park: any) => {
         const marker = new naver.maps.Marker({
           position: new naver.maps.LatLng(park.lat, park.lng),
@@ -339,20 +327,19 @@ const Map = ({
             anchor: new naver.maps.Point(25, 25),
           },
         } as any);
-
-        naver.maps.Event.addListener(marker, "click", () => {
+        naver.maps.Event.addListener(marker, "click", async () => {
           const latlng = new naver.maps.LatLng(park.lat, park.lng);
-          const modal = document.getElementById("modal");
-          const modalContent = document.getElementById("modalContent");
-          const modalCity = document.getElementById("modalCity");
-          const modalPhone = document.getElementById("modalPhone");
-          searchCoordinateToAddress(latlng, park.title);
-
-          if (modal && modalContent && latlng && modalCity && modalPhone) {
-            modalContent.innerHTML = park.title;
-            modalPhone.innerHTML = park.tel;
-            modal.classList.remove("hidden");
-          }
+          const { address, cityName } = await searchCoordinateToAddress(
+            latlng,
+            park.title
+          );
+          setModalData({
+            type: "park",
+            title: park.title,
+            region: cityName,
+            address: address,
+            phone: park.tel,
+          });
         });
         return marker;
       });
@@ -362,29 +349,31 @@ const Map = ({
   };
 
   // 좌표 -> 주소 변환 비동기적으로 호출
-function searchCoordinateToAddress(
-  latlng: naver.maps.LatLng,
-  title?: string,
-){naver.maps.Service.reverseGeocode(
-      {
-        coords: latlng,
-        orders: [
-          naver.maps.Service.OrderType.ADDR,
-          naver.maps.Service.OrderType.ROAD_ADDR,
-        ].join(","),
-      },
-      function (status, response) {
-        if (status === naver.maps.Service.Status.ERROR) {
-          alert("Something Wrong!");
-          return;
-        }
-
-        const items = response?.v2?.results || response?.result?.items || [];
-        const htmlAddresses: string[] = [];
-        const cityName = items[0].region.area1.name;
-
-        for (let i = 0; i < items.length; i++) {
-          const item = items[i];
+  async function searchCoordinateToAddress(
+    latlng: naver.maps.LatLng,
+    title?: string
+  ): Promise<{ address: string; cityName: string }> {
+    return new Promise((resolve, reject) => {
+      naver.maps.Service.reverseGeocode(
+        {
+          coords: latlng,
+          orders: [
+            naver.maps.Service.OrderType.ADDR,
+            naver.maps.Service.OrderType.ROAD_ADDR,
+          ].join(","),
+        },
+        function (status, response) {
+          if (status === naver.maps.Service.Status.ERROR) {
+            reject("주소 조회 실패");
+            return;
+          }
+          const items = response?.v2?.results || [];
+          if (items.length === 0) {
+            resolve({ address: "주소 없음", cityName: "도시 정보 없음" });
+            return;
+          }
+          const item = items[0];
+          const cityName = item.region.area1.name;
           const address =
             item.region.area1.name +
             " " +
@@ -396,229 +385,209 @@ function searchCoordinateToAddress(
             (item.land.number1 ? " " + item.land.number1 : "") +
             (item.land.number2 ? "-" + item.land.number2 : "") +
             (item.land.addition0?.value ? " " + item.land.addition0.value : "");
+          const contentHtml = `
+            <div style="position:relative;padding:10px;min-width:150px;min-height:80px;line-height:140%;font-size:12px;">
+              <h1>${title || "정보없음"}</h1>
+              <p>주소 : ${address}</p>
+            </div>
+          `;
+          infoRaf.current?.setContent(contentHtml);
+          infoRaf.current?.open(mapRef.current!, latlng);
 
-          const addrType =
-            item.name === "roadaddr" ? "[도로명 주소]" : "[지번 주소]";
-          htmlAddresses.push(`${i + 1}. ${addrType} ${address}`);
+          resolve({ address, cityName });
         }
-
-        const modalContent = document.getElementById("modalContent");
-        const modalLatlng = document.getElementById("modalLatlng");
-        const modalCity = document.getElementById("modalCity");
-        const allAddress = htmlAddresses.join("<br/>");
-
-        if (modalContent) modalContent.innerHTML = `${title}`;
-        if (modalLatlng) modalLatlng.innerHTML = `${allAddress}`;
-        if (modalCity) modalCity.innerHTML = cityName;
-
-        const contentHtml = `
-        <div style="position:relative;padding:10px;min-width:200px;min-height:100px;line-height:140%;font-size:12px;">
-          <h2>${title || "정보없음"}</h2>
-          ${htmlAddresses.join("<br />")}
-        </div>
-        `;
-        infoRaf.current?.setContent(contentHtml);
-        infoRaf.current?.open(mapRef.current!, latlng);
-
-      }
-    );
+      );
+    });
   }
 
-  // 지도 초기화
+  // 지도 로딩 후 실행
   const initializeMap = () => {
+    const mapId = "map";
+    const center = new window.naver.maps.LatLng(...INITIAL_CENTER);
     const mapOptions = {
-      center: new window.naver.maps.LatLng(...INITIAL_CENTER),
+      center: center,
       zoom: INITIAL_ZOOM,
-      minZoom: 6,
-      scaleControl: false,
-      mapDataControl: false,
-      logoControlOptions: {
-        position: naver.maps.Position.BOTTOM_RIGHT,
-      },
-    }
+    };
     // 지도 Id, options
     const map = new window.naver.maps.Map(mapId, mapOptions);
     map.setCursor("pointer");
     mapRef.current = map;
 
+    // 지도 이동시 마커 업데이트
+    const idleListener = window.naver.maps.Event.addListener(
+      map,
+      "idle",
+      () => {
+        fetchHospitals(); // 지도가 멈추면 다시 불러오기
+      }
+    );
 
-
-    infoRaf.current = new naver.maps.InfoWindow({
-      content: "",
-      maxWidth: 100,
-      backgroundColor: "white",
-      anchorSize: new naver.maps.Size(0, 0),
-      anchorColor: "white",
-      pixelOffset: new naver.maps.Point(5, -25),
-    });
-
-    //주소를 좌표로 변환
-    function searchAddressToCoordinate(address: any) {
-      naver.maps.Service.geocode(
-        {
-          query: address,
-        },
-        function (status, response) {
-          if (status === naver.maps.Service.Status.ERROR) {
-            return alert("Something Wrong!");
-          }
-
-          if (response.v2.meta.totalCount === 0) {
-            return alert("주소를 찾을 수 없습니다.");
-          }
-
-          const htmlAddresses = [],
-            item = response.v2.addresses[0],
-            point = new naver.maps.LatLng(
-              parseFloat(item.x),
-              parseFloat(item.y)
-            );
-
-          mapRef.current?.setCenter(point);
-
-          if (item.roadAddress) {
-            htmlAddresses.push("[도로명 주소] " + item.roadAddress);
-          }
-
-          if (item.jibunAddress) {
-            htmlAddresses.push("[지번 주소] " + item.jibunAddress);
-          }
-
-          if (item.englishAddress) {
-            htmlAddresses.push("[영문명 주소] " + item.englishAddress);
-          }
-          // infoWindow 내용
-          infoRaf.current?.setContent(`
-            <div style="padding:10px;min-width:200px;line-height:150%;">
-              <h4 style="margin-top:5px;">검색 주소: ${address}</h4><br />
-              ${htmlAddresses.join("<br />")}
-            </div>
-          `);
-
-          infoRaf.current?.open(mapRef.current!, point);
-        }
-      );
-    }
-
-    KcisaApi();
+    return () => {
+      window.naver.maps.Event.removeListener(idleListener);
+    };
   };
 
+  // 병원 정보 가져오기
+  const fetchHospitals = async () => {
+    const map = mapRef.current;
+    if (!map) return;
+    const hospitals = await KcisaApi("동물병원");
+
+    const bounds = map.getBounds() as naver.maps.LatLngBounds;
+    const sw = bounds.getSW();
+    const ne = bounds.getNE();
+
+    const minLat = sw.lat();
+    const minLng = sw.lng();
+    const maxLat = ne.lat();
+    const maxLng = ne.lng();
+
+    // 범위 내만 필터링 
+
+    const filtered = hospitals.filter((hospital: any) => {
+      const lat = parseFloat(hospital.lat);
+      const lng = parseFloat(hospital.lng);
+
+      return (
+      !isNaN(lat) &&
+      !isNaN(lng) &&
+      lat >= minLat && lat <= maxLat &&
+      lng >= minLng && lng <= maxLng
+    );
+    })
+
+    // 기존 마커를 제거한다. 
+    markerRef.current.forEach((marker) => marker.setMap(null));
+
+    // 새로운 마커 생성 
+    const markers = filtered.map((hospital: any) => {
+      const marker = new window.naver.maps.Marker({
+        position: new naver.maps.LatLng(hospital.lat, hospital.lng),
+        map: mapRef.current,
+        title: hospital.title,
+        icon: {
+          url: "/picture_images/map/animalhospital_marker.png",
+          scaledSize: new window.naver.maps.Size(50, 50),
+          anchor: new window.naver.maps.Point(25, 25),
+        },
+      });
+
+      window.naver.maps.Event.addListener(marker, "click", () => {
+        setModalData({
+          type: "hospital",
+          title: hospital.title,
+          address: hospital.address,
+          phone: hospital.tel,
+        });
+      });
+
+      return marker;
+    });
+
+    markerRef.current = markers;
+
+  };
+
+  // 스크립트 로드 후 실행
+  const handleScriptLoad = () => {
+    initializeMap();
+    fetchHospitals();
+  }
+
+
   return (
-    <>
-      <Script
-        strategy="afterInteractive"
-        src={`https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID}&submodules=geocoder`}
-        onReady={initializeMap}
-      />
-      <div
-        id={mapId}
-        style={{
-          width: "calc(100% - 10px)",
-          height: "100%",
-          position: "relative",
-          marginLeft: "0px",
-          marginRight: "10px",
-        }}
-      >
-        <button
-          className="flex justify-center items-center px-4 py-2 bg-white/60 rounded-2xl"
-          onClick={handleCurrentLocationClick}
-          style={{
-            position: "absolute",
-            top: 10,
-            left: "50%",
-            transform: "translateX(-50%)",
-            zIndex: 999,
-          }}
-        >
-          현재 위치
-        </button>
-        <button
-          className="flex justify-center items-center"
-          onClick={handleShelterLocationClick}
-          style={{ position: "absolute", top: 10, left: "10%", zIndex: 999 }}
-        >
-          보호소
-        </button>
-        <button
-          className="flex justify-center items-cnter"
-          onClick={handleHospitalLocationClick}
-          style={{ position: "absolute", top: 10, left: "20%", zIndex: 999 }}
-        >
-          동물병원
-        </button>
-        <button
-          className="flex justify-center items-cnter"
-          onClick={handleCafeLocationClick}
-          style={{ position: "absolute", top: 10, left: "30%", zIndex: 999 }}
-        >
-          카페
-        </button>
-        <button
-          className="flex justify-center items-cnter"
-          onClick={handleFoodLocationClick}
-          style={{ position: "absolute", top: 10, left: "60%", zIndex: 999 }}
-        >
-          음식
-        </button>
-        <button
-          className="flex justify-center items-cnter"
-          onClick={handleHotelLocationClick}
-          style={{ position: "absolute", top: 10, left: "70%", zIndex: 999 }}
-        >
-          숙박
-        </button>
-        <button
-          className="flex justify-center items-cnter"
-          onClick={handleParkLocationClick}
-          style={{ position: "absolute", top: 10, left: "80%", zIndex: 999 }}
-        >
-          공원
-        </button>
-        <input
-          type="text"
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-        />
-        {/* 모달  */}
-        <div id="modal" className={styles.modal}>
-          <div className={styles.modal_content}>
-            <p id="modalContent" className="text-xl font-bold" />
-            <p id="modalCity" />
-            <p id="modalLatlng" />
-            <p id="modalPhone" />
-            <button
-              className="m-5 px-5 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-              onClick={() => {
-                const modal = document.getElementById("modal");
-                if (modal) modal.classList.add("hidden");
-              }}
-            >
-              닫기
-            </button>
-          </div>
+      <>
+          <Script
+          strategy="afterInteractive"
+          src={`https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID}&submodules=geocoder`}
+          onReady={handleScriptLoad}/>
+        
+        <div
+            id={mapId}
+            style={{
+              width: "calc(100% - 10px)",
+              height: "100%",
+              position: "relative",
+              marginLeft: "0px",
+              marginRight: "10px",
+            }}
+          >
+        
+          <button
+            className="flex justify-center items-center px-4 py-2 bg-white/60 rounded-2xl"
+            onClick={handleCurrentLocationClick}
+            style={{
+              position: "absolute",
+              top: 10,
+              left: "50%",
+              transform: "translateX(-50%)",
+              zIndex: 999,
+            }}
+          >
+            현재 위치
+          </button>
+          <button
+            className="flex justify-center items-center"
+            onClick={handleShelterLocationClick}
+            style={{ position: "absolute", top: 10, left: "10%", zIndex: 999 }}
+          >
+            보호소
+          </button>
+          <button
+            className="flex justify-center items-cnter"
+            onClick={handleHospitalLocationClick}
+            style={{ position: "absolute", top: 10, left: "20%", zIndex: 999 }}
+          >
+            동물병원
+          </button>
+          <button
+            className="flex justify-center items-cnter"
+            onClick={handleCafeLocationClick}
+            style={{ position: "absolute", top: 10, left: "30%", zIndex: 999 }}
+          >
+            카페
+          </button>
+          <button
+            className="flex justify-center items-cnter"
+            onClick={handleFoodLocationClick}
+            style={{ position: "absolute", top: 10, left: "60%", zIndex: 999 }}
+          >
+            음식
+          </button>
+          <button
+            className="flex justify-center items-cnter"
+            onClick={handleHotelLocationClick}
+            style={{ position: "absolute", top: 10, left: "70%", zIndex: 999 }}
+          >
+            숙박
+          </button>
+          <button
+            className="flex justify-center items-cnter"
+            onClick={handleParkLocationClick}
+            style={{ position: "absolute", top: 10, left: "80%", zIndex: 999 }}
+          >
+            공원
+          </button>
+          {/* <input
+            type="text"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+          /> */}
+        
+          {modalData && (
+            <div className={styles.modal}>
+              <div className={styles.modal_content}>
+                <p className="text-xl font-bold">{modalData.title}</p>
+                <p>{modalData.region}</p>
+                <p>{modalData.address}</p>
+                <p>{modalData.phone}</p>
+                <button className="m-5 px-5 py-2 bg-blue-500 text-white rounded hover:bg-blue-600" onClick={() => setModalData(null)}>
+                  닫기</button>
+              </div>
+            </div>)}
         </div>
-        {/* 모달  */}
-        {/* <div id="modal2" className={styles.modal}>
-          <div className={styles.modal_content}>
-            <p id="modalContent" className="text-xl font-bold" />
-            <p id="modalRegion" />
-            <p id="modalLatlng" />
-            <p id="modalPhone" />
-            <button
-              className="m-5 px-5 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-              onClick={() => {
-                const modal = document.getElementById("modal2");
-                if (modal) modal.classList.add("hidden");
-              }}
-            >
-              닫기
-            </button>
-          </div>
-        </div> */}
-      </div>
-    </>
-  );
+      </>
+    )
 };
 
 export default Map;
