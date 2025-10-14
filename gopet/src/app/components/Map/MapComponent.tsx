@@ -8,8 +8,6 @@ import { NaverMap } from "./types/map";
 import styles from "./Map.module.css";
 import shelter from "../../../shelter.json";
 
-
-
 type Props = {
   mapId?: string;
   initialCenter?: Coordinates;
@@ -54,71 +52,74 @@ export default function MapComponent({
 
   // 마커 버튼
   const showMarkers = async (type: PlaceType, keyword: string) => {
-  const map = mapRef.current;
-  if (!map) return;
+    const map = mapRef.current;
+    if (!map) return;
 
-  if (!hasSetIdleListener.current) {
-    window.naver.maps.Event.addListener(map, "idle", () => {
-      showMarkers(type, keyword);
-    });
-    hasSetIdleListener.current = true;
-  }
-
-  const results = await KcisaApi(keyword);
-
-  const bounds = map.getBounds() as naver.maps.LatLngBounds;
-  const sw = bounds.getSW();
-  const ne = bounds.getNE();
-
-  const filtered = results.filter((item: any) => {
-    const lat = parseFloat(item.lat);
-    const lng = parseFloat(item.lng);
-    return (
-      !isNaN(lat) &&
-      !isNaN(lng) &&
-      lat >= sw.lat() &&
-      lat <= ne.lat() &&
-      lng >= sw.lng() &&
-      lng <= ne.lng()
-    );
-  });
-
-  const newMarkers: naver.maps.Marker[] = [];
-
-  // 마커생성
-  filtered.forEach((item: any) => {
-    const marker = new window.naver.maps.Marker({
-      position: new window.naver.maps.LatLng(item.lat, item.lng),
-      map,
-      title: item.title,
-      icon: {
-        url: markerIcons[type],
-        scaledSize: new window.naver.maps.Size(50, 50),
-        anchor: new window.naver.maps.Point(25, 25),
-      },
-    });
-
-    window.naver.maps.Event.addListener(marker, "click", async() => {
-      const latlng = new window.naver.maps.LatLng(item.lat, item.lng);
-      const { address, cityName } = await searchCoordinateToAddress(latlng, item.title);
-      setModalData({
-        type,
-        title: item.title,
-        address: address,
-        region: cityName,
-        phone: item.tel, 
+    if (!hasSetIdleListener.current) {
+      window.naver.maps.Event.addListener(map, "idle", () => {
+        showMarkers(type, keyword);
       });
+      hasSetIdleListener.current = true;
+    }
+
+    const results = await KcisaApi(keyword);
+
+    const bounds = map.getBounds() as naver.maps.LatLngBounds;
+    const sw = bounds.getSW();
+    const ne = bounds.getNE();
+
+    const filtered = results.filter((item: any) => {
+      const lat = parseFloat(item.lat);
+      const lng = parseFloat(item.lng);
+      return (
+        !isNaN(lat) &&
+        !isNaN(lng) &&
+        lat >= sw.lat() &&
+        lat <= ne.lat() &&
+        lng >= sw.lng() &&
+        lng <= ne.lng()
+      );
     });
 
-    newMarkers.push(marker);
-  });
+    const newMarkers: naver.maps.Marker[] = [];
 
-  // 기존 마커를 새 마커가 렌더된 후 제거
-  markerRef.current.forEach((marker) => marker.setMap(null));
+    // 마커생성
+    filtered.forEach((item: any) => {
+      const marker = new window.naver.maps.Marker({
+        position: new window.naver.maps.LatLng(item.lat, item.lng),
+        map,
+        title: item.title,
+        icon: {
+          url: markerIcons[type],
+          scaledSize: new window.naver.maps.Size(50, 50),
+          anchor: new window.naver.maps.Point(25, 25),
+        },
+      });
 
-  // 마커 업데이트
-  markerRef.current = newMarkers;
-};
+      window.naver.maps.Event.addListener(marker, "click", async () => {
+        const latlng = new window.naver.maps.LatLng(item.lat, item.lng);
+        const { address, cityName } = await searchCoordinateToAddress(
+          latlng,
+          item.title
+        );
+        setModalData({
+          type,
+          title: item.title,
+          address: address,
+          region: cityName,
+          phone: item.tel,
+        });
+      });
+
+      newMarkers.push(marker);
+    });
+
+    // 기존 마커를 새 마커가 렌더된 후 제거
+    markerRef.current.forEach((marker) => marker.setMap(null));
+
+    // 마커 업데이트
+    markerRef.current = newMarkers;
+  };
 
   // 현재 위치 버튼
   const handleCurrentLocationClick = () => {
@@ -138,39 +139,39 @@ export default function MapComponent({
         mapRef.current!.setCenter(currentLocation);
       });
     }
-  }
+  };
 
   // 보호소 json파일 사용
-    const handleShelterLocationClick = () => {
-      const newMarkers = shelter.map((data) => {
-        const marker = new window.naver.maps.Marker({
-          position: new naver.maps.LatLng(Number(data.lat), Number(data.lng)),
-          map: mapRef.current!,
-          title: data.name,
-          icon: {
-            url: "/picture_images/map/shelter_marker.png",
-            scaledSize: new naver.maps.Size(50, 50),
-            anchor: new naver.maps.Point(25, 25),
-          },
-        });
-        // marker 클릭시 아니라 그냥 주소창을띄울 수 있도록
-
-        naver.maps.Event.addListener(marker, "click", () => {
-          const latlng = new naver.maps.LatLng(
-            Number(data.lat),
-            Number(data.lng)
-          );
-          searchCoordinateToAddress(latlng, data.name);
-          setModalData({
-            type: "shelter",
-            title: data.name,
-            region: data.region,
-            address: data.address,
-            phone: data.phone,
-          });
-        });
-        return marker;
+  const handleShelterLocationClick = () => {
+    const newMarkers = shelter.map((data) => {
+      const marker = new window.naver.maps.Marker({
+        position: new naver.maps.LatLng(Number(data.lat), Number(data.lng)),
+        map: mapRef.current!,
+        title: data.name,
+        icon: {
+          url: "/picture_images/map/shelter_marker.png",
+          scaledSize: new naver.maps.Size(50, 50),
+          anchor: new naver.maps.Point(25, 25),
+        },
       });
+      // marker 클릭시 아니라 그냥 주소창을띄울 수 있도록
+
+      naver.maps.Event.addListener(marker, "click", () => {
+        const latlng = new naver.maps.LatLng(
+          Number(data.lat),
+          Number(data.lng)
+        );
+        searchCoordinateToAddress(latlng, data.name);
+        setModalData({
+          type: "shelter",
+          title: data.name,
+          region: data.region,
+          address: data.address,
+          phone: data.phone,
+        });
+      });
+      return marker;
+    });
   };
 
   // 클릭 핸들러
@@ -244,62 +245,85 @@ export default function MapComponent({
 
   // 스크립트 로드 후 실행
   const handleScriptLoad = () => {
-    initializeMap();
+    initializeMap();  
   };
   return (
     <>
-      {/* Naver Maps Script */}
-      <Script
-        src={`https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID}&submodules=geocoder`}
-        strategy="afterInteractive"
-        onLoad={handleScriptLoad}
-      />
-      {/* 지도 표시 */}
-      <button
-        className="felx justify-center items-center"
-        onClick={handleShelterLocationClick}
-        style={{ position: "absolute", top: 10, left: "10%", zIndex: 999}}>
-        보호소
-      </button>
-      <button
-        className="flex justify-center items-cnter"
-        onClick={handleHospitalLocationClick}
-        style={{ position: "absolute", top: 10, left: "20%", zIndex: 999 }}
-      >
-        동물병원
-      </button>
-      <button
-        className="flex justify-center items-cnter"
-        onClick={handleParkLocationClick}
-        style={{ position: "absolute", top: 10, left: "30%", zIndex: 999 }}
-      >
-        공원
-      </button>
-      <button className="flex justify-center items-center px-4 py-2 bg-white/60 rounded-2xl"
-        onClick={handleCurrentLocationClick}
-        style={{ position: "absolute", top: 10, left: "50%", zIndex: 999}}>
-        현재 위치        
-      </button>
-
-
-      <div id={mapId} style={{ width: "90%", height: "500px" }} />
+      <div id={mapId} style={{ width: "100%", height: "640px" }}>
+        {/* Naver Maps Script */}
+        <Script
+          src={`https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID}&submodules=geocoder`}
+          strategy="afterInteractive"
+          onLoad={handleScriptLoad}
+        />
+        {/* 지도 표시 */}
+        <button
+          className="flex justify-center items-center px-4 py-2 bg-white/60 rounded-2xl"
+          onClick={handleHotelLocationClick}
+          style={{ position: "absolute", top: 10, left: "10%", zIndex: 999 }}
+        >
+          숙박
+        </button>
+        <button
+          className="flex justify-center items-center px-4 py-2 bg-white/60 rounded-2xl"
+          onClick={handleCafeLocationClick}
+          style={{ position: "absolute", top: 10, left: "20%", zIndex: 999 }}
+        >
+          카페
+        </button>
+        <button
+          className="flex justify-center items-center px-4 py-2 bg-white/60 rounded-2xl"
+          onClick={handleFoodLocationClick}
+          style={{ position: "absolute", top: 10, left: "30%", zIndex: 999 }}
+        >
+          음식
+        </button>
+        <button
+          className="flex justify-center items-cnter px-4 py-2 bg-white/60 reounded-2xl"
+          onClick={handleParkLocationClick}
+          style={{ position: "absolute", top: 10, left: "40%", zIndex: 999 }}
+        >
+          공원
+        </button>
+        <button
+          className="flex justify-center items-center px-4 py-2 bg-white/60 rounded-2xl"
+          onClick={handleCurrentLocationClick}
+          style={{ position: "absolute", top: 10, left: "50%", zIndex: 999 }}
+        >
+          현재 위치
+        </button>
+        <button
+          className="felx justify-center items-center px-4 py-2 bg-white/60 rounded-2xl"
+          onClick={handleShelterLocationClick}
+          style={{ position: "absolute", top: 10, left: "60%", zIndex: 999 }}
+        >
+          보호소
+        </button>
+        <button
+          className="flex justify-center items-center px-4 py-2 bg-white/60 rounded-2xl"
+          onClick={handleHospitalLocationClick}
+          style={{ position: "absolute", top: 10, left: "70%", zIndex: 999 }}
+        >
+          동물병원
+        </button>
+      </div>
 
       {modalData && (
-          <div className={styles.modal}>
-            <div className={styles.modal_content}>
-              <p className="text-xl font-bold">{modalData.title}</p>
-              <p>{modalData.region}</p>
-              <p>{modalData.address}</p>
-              <p>{modalData.phone}</p>
-              <button
-                className="m-5 px-5 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                onClick={() => setModalData(null)}
-              >
-                닫기
-              </button>
-            </div>
+        <div className={styles.modal}>
+          <div className={styles.modal_content}>
+            <p className="text-xl font-bold">{modalData.title}</p>
+            <p>{modalData.region}</p>
+            <p>{modalData.address}</p>
+            <p>{modalData.phone}</p>
+            <button
+              className="m-5 px-5 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              onClick={() => setModalData(null)}
+            >
+              닫기
+            </button>
           </div>
-        )}
+        </div>
+      )}
     </>
   );
 }

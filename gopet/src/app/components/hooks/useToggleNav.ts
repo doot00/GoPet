@@ -1,4 +1,5 @@
-import { useState } from "react"
+'use client';
+import { useState } from "react";
 
 export const useToggleNav = (initialState: boolean = false) => {
     const [isNavOpen, setIsNavOpen] = useState(initialState); 
