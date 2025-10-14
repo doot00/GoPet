@@ -34,7 +34,7 @@ function getSlideGroup(startIndex: number, size: number): Slide[] {
 
 export default function SwiperCarousel() {
   const groupSize = 5;
-  const totalGroups = slideData.length; // 순환 슬라이드 개수
+  const totalGroups = slideData.length; // 순환 슬라이드 
 
   return (
     <div className="w-full relative overflow-visible">

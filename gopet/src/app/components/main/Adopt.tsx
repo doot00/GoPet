@@ -3,14 +3,18 @@ import React from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination } from "swiper/modules";
 
+
+// api값을 불러오기 
+
+
 const Adopt = () => {
   return (
     <>
       <h1 className="text-3xl mt-10 p-10">🐶 유기견 입양</h1>
       <Swiper
-        slidesPerView={4}
+        slidesPerView={5}
         spaceBetween={20}
-        slidesPerGroup={4}
+        slidesPerGroup={5}
         pagination={{
           clickable: true,
         }}

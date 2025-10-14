@@ -5,13 +5,10 @@ import { useEffect, useRef, useState } from "react";
 import KcisaApi from "../../api/KcisaApi";
 import { Coordinates } from "./types/store";
 import { NaverMap } from "./types/map";
-import useMap, { INITIAL_CENTER, INITIAL_ZOOM } from "../hooks/useMap";
+import styles from "./Map.module.css";
+import shelter from "../../../shelter.json";
 
-declare global {
-  interface Window {
-    naver: any;
-  }
-}
+
 
 type Props = {
   mapId?: string;
@@ -23,6 +20,9 @@ type Props = {
   orders?: string;
 };
 
+export const INITIAL_CENTER: Coordinates = [37.5262411, 126.99289439];
+export const INITIAL_ZOOM = 10;
+// 맵
 export default function MapComponent({
   mapId = "map",
   initialCenter = { ...INITIAL_CENTER },
@@ -33,12 +33,12 @@ export default function MapComponent({
   const markerRef = useRef<naver.maps.Marker[]>([]);
   const hasSetIdleListener = useRef(false);
 
+  // 모달
   const [modalData, setModalData] = useState<null | {
-    type: "hospital" | "shelter" | "cafe" | "food" | "hotel" | "park";
+    type: "hospital" | "cafe" | "food" | "hotel" | "park" | "shelter";
     title: string;
     address?: string;
     region?: string;
-    city?: string;
     phone: string;
   }>(null);
 
@@ -98,12 +98,15 @@ export default function MapComponent({
       },
     });
 
-    window.naver.maps.Event.addListener(marker, "click", () => {
+    window.naver.maps.Event.addListener(marker, "click", async() => {
+      const latlng = new window.naver.maps.LatLng(item.lat, item.lng);
+      const { address, cityName } = await searchCoordinateToAddress(latlng, item.title);
       setModalData({
         type,
         title: item.title,
-        address: item.address,
-        phone: item.tel,
+        address: address,
+        region: cityName,
+        phone: item.tel, 
       });
     });
 
@@ -117,11 +120,65 @@ export default function MapComponent({
   markerRef.current = newMarkers;
 };
 
+  // 현재 위치 버튼
+  const handleCurrentLocationClick = () => {
+    if (!mapRef.current) return;
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        const currentLocation = new naver.maps.LatLng(
+          position.coords.latitude,
+          position.coords.longitude
+        );
+        new naver.maps.Marker({
+          position: currentLocation,
+          map: mapRef.current!,
+          title: "현재 위치",
+        });
+        mapRef.current!.setCenter(currentLocation);
+      });
+    }
+  }
+
+  // 보호소 json파일 사용
+    const handleShelterLocationClick = () => {
+      const newMarkers = shelter.map((data) => {
+        const marker = new window.naver.maps.Marker({
+          position: new naver.maps.LatLng(Number(data.lat), Number(data.lng)),
+          map: mapRef.current!,
+          title: data.name,
+          icon: {
+            url: "/picture_images/map/shelter_marker.png",
+            scaledSize: new naver.maps.Size(50, 50),
+            anchor: new naver.maps.Point(25, 25),
+          },
+        });
+        // marker 클릭시 아니라 그냥 주소창을띄울 수 있도록
+
+        naver.maps.Event.addListener(marker, "click", () => {
+          const latlng = new naver.maps.LatLng(
+            Number(data.lat),
+            Number(data.lng)
+          );
+          searchCoordinateToAddress(latlng, data.name);
+          setModalData({
+            type: "shelter",
+            title: data.name,
+            region: data.region,
+            address: data.address,
+            phone: data.phone,
+          });
+        });
+        return marker;
+      });
+  };
 
   // 클릭 핸들러
   const handleHospitalLocationClick = () => showMarkers("hospital", "동물병원");
   const handleParkLocationClick = () => showMarkers("park", "여행지");
-
+  const handleCafeLocationClick = () => showMarkers("cafe", "카페");
+  const handleHotelLocationClick = () => showMarkers("hotel", "펜션");
+  const handleFoodLocationClick = () => showMarkers("food", "식당");
 
   // 지도 로딩 후 실행
   const initializeMap = () => {
@@ -133,6 +190,58 @@ export default function MapComponent({
     const map = new window.naver.maps.Map(mapId, mapOptions);
     mapRef.current = map;
   };
+
+  async function searchCoordinateToAddress(
+    latlng: naver.maps.LatLng,
+    title?: string
+  ): Promise<{ address: string; cityName: string }> {
+    return new Promise((resolve, reject) => {
+      naver.maps.Service.reverseGeocode(
+        {
+          coords: latlng,
+          orders: [
+            naver.maps.Service.OrderType.ADDR,
+            naver.maps.Service.OrderType.ROAD_ADDR,
+          ].join(","),
+        },
+        function (status, response) {
+          if (status === naver.maps.Service.Status.ERROR) {
+            reject("주소 조회 실패");
+            return;
+          }
+          const items = response?.v2?.results || [];
+          if (items.length === 0) {
+            resolve({ address: "주소 없음", cityName: "도시 정보 없음" });
+            return;
+          }
+          const item = items[0];
+          const cityName = item.region.area1.name;
+          const address =
+            item.region.area1.name +
+            " " +
+            item.region.area2.name +
+            " " +
+            item.region.area3.name +
+            " " +
+            item.region.area4.name +
+            (item.land.number1 ? " " + item.land.number1 : "") +
+            (item.land.number2 ? "-" + item.land.number2 : "") +
+            (item.land.addition0?.value ? " " + item.land.addition0.value : "");
+          const contentHtml = `
+            <div style="position:relative;padding:10px;min-width:150px;min-height:80px;line-height:140%;font-size:12px;">
+              <h1>${title || "정보없음"}</h1>
+              <p>주소 : ${address}</p>
+            </div>
+          `;
+          infoRaf.current?.setContent(contentHtml);
+          infoRaf.current?.open(mapRef.current!, latlng);
+
+          resolve({ address, cityName });
+        }
+      );
+    });
+  }
+
   // 스크립트 로드 후 실행
   const handleScriptLoad = () => {
     initializeMap();
@@ -147,6 +256,12 @@ export default function MapComponent({
       />
       {/* 지도 표시 */}
       <button
+        className="felx justify-center items-center"
+        onClick={handleShelterLocationClick}
+        style={{ position: "absolute", top: 10, left: "10%", zIndex: 999}}>
+        보호소
+      </button>
+      <button
         className="flex justify-center items-cnter"
         onClick={handleHospitalLocationClick}
         style={{ position: "absolute", top: 10, left: "20%", zIndex: 999 }}
@@ -160,7 +275,31 @@ export default function MapComponent({
       >
         공원
       </button>
+      <button className="flex justify-center items-center px-4 py-2 bg-white/60 rounded-2xl"
+        onClick={handleCurrentLocationClick}
+        style={{ position: "absolute", top: 10, left: "50%", zIndex: 999}}>
+        현재 위치        
+      </button>
+
+
       <div id={mapId} style={{ width: "90%", height: "500px" }} />
+
+      {modalData && (
+          <div className={styles.modal}>
+            <div className={styles.modal_content}>
+              <p className="text-xl font-bold">{modalData.title}</p>
+              <p>{modalData.region}</p>
+              <p>{modalData.address}</p>
+              <p>{modalData.phone}</p>
+              <button
+                className="m-5 px-5 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                onClick={() => setModalData(null)}
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        )}
     </>
   );
 }
