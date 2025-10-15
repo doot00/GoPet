@@ -1,11 +1,12 @@
 "use client";
 
 import Script from "next/script";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import KcisaApi from "../../api/KcisaApi";
 import { Coordinates } from "./types/store";
 import { NaverMap } from "./types/map";
-import styles from "./Map.module.css";
+import { GiRotaryPhone } from "react-icons/gi";
+import { AiOutlineEnvironment } from "react-icons/ai";
 import shelter from "../../../shelter.json";
 
 type Props = {
@@ -20,6 +21,7 @@ type Props = {
 
 export const INITIAL_CENTER: Coordinates = [37.5262411, 126.99289439];
 export const INITIAL_ZOOM = 10;
+
 // 맵
 export default function MapComponent({
   mapId = "map",
@@ -30,6 +32,8 @@ export default function MapComponent({
   const infoRaf = useRef<naver.maps.InfoWindow | null>(null);
   const markerRef = useRef<naver.maps.Marker[]>([]);
   const hasSetIdleListener = useRef(false);
+  const [activeTab, setActiveTab] = useState(0);
+  const [sidebarVisible, setSidebarVisible] = useState(true);
 
   // 모달
   const [modalData, setModalData] = useState<null | {
@@ -49,7 +53,10 @@ export default function MapComponent({
     food: "/picture_images/map/food_marker.png",
     hotel: "/picture_images/map/hotel_marker.png",
   };
-
+  // 탭 버튼
+  const Tab = () => {
+    const tabs = [{ id: 0, name: "" }];
+  };
   // 마커 버튼
   const showMarkers = async (type: PlaceType, keyword: string) => {
     const map = mapRef.current;
@@ -187,6 +194,13 @@ export default function MapComponent({
     const mapOptions = {
       center,
       zoom: initialZoom,
+      scaleControl: false,
+      logoControlOptions: {
+        position: naver.maps.Position.RIGHT_TOP,
+      },
+      mapDataControl: false,
+      zoomControl: false,
+      mapTypeControl: false,
     };
     const map = new window.naver.maps.Map(mapId, mapOptions);
     mapRef.current = map;
@@ -245,18 +259,96 @@ export default function MapComponent({
 
   // 스크립트 로드 후 실행
   const handleScriptLoad = () => {
-    initializeMap();  
+    initializeMap();
   };
+
   return (
-    <>
-      <div id={mapId} style={{ width: "100%", height: "640px" }}>
-        {/* Naver Maps Script */}
+    <div style={{ display: "flex", width: "100%", height: "640px" }}>
+      {sidebarVisible && (
+        <div
+          className="w3-sidebar w3-white w3-bar-block"
+          style={{
+            width: "25%",
+            backgroundColor: "#f3f4f6",
+            opacity: 0.95,
+            padding: "1rem",
+            position: "relative",
+            height: "640px",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          {/* 상단 메뉴 + 닫기 버튼 */}
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex space-x-2">
+              <a
+                href="#"
+                className="w3-bar-item w3-button m-1 py-2 px-4 bg-white rounded-2xl hover:bg-gray-200"
+              >
+                홈
+              </a>
+              <a
+                href="#"
+                className="w3-bar-item w3-button m-1 py-2 px-4 bg-white rounded-2xl hover:bg-gray-200"
+              >
+                정보
+              </a>
+            </div>
+            <button
+              className="w3-bar-item w3-button bg-blue-500 px-3 py-2 text-white rounded-2xl hover:bg-blue-600"
+              onClick={() => setSidebarVisible(false)}
+            >
+              닫기
+            </button>
+          </div>
+
+          {/* 이미지 */}
+          <div className="flex justify-center mb-4">
+            <img
+              src="/picture_images/festivallist/festival1.jpg"
+              alt="Festival"
+              className="rounded w-full max-h-80 object-cover"
+            />
+          </div>
+
+          {/* 모달 정보 */}
+          {modalData && (
+            <div className="bg-white rounded-2xl p-4">
+              <p className="flex justify-center items-center text-xl font-bold mb-3">{modalData.title}</p>
+              <div className="flex">
+                <span className="text-2xl">
+                  <AiOutlineEnvironment />
+                </span>
+                <span className="ml-2">{modalData.address}</span>
+              </div>
+              <div className="flex items-center">
+                <span className="text-2xl">
+                  <GiRotaryPhone />
+                </span>
+                <span className="ml-2">{modalData.phone}</span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 지도 영역 */}
+      <div
+        id={mapId}
+        style={{
+          width: sidebarVisible ? "80%" : "100%",
+          height: "100%",
+          position: "relative",
+          transition: "width 0.3s ease",
+        }}
+      >
         <Script
           src={`https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID}&submodules=geocoder`}
           strategy="afterInteractive"
           onLoad={handleScriptLoad}
         />
-        {/* 지도 표시 */}
+
+        {/* 지도 마크 버튼 */}
         <button
           className="flex justify-center items-center px-4 py-2 bg-white/60 rounded-2xl"
           onClick={handleHotelLocationClick}
@@ -279,18 +371,18 @@ export default function MapComponent({
           음식
         </button>
         <button
-          className="flex justify-center items-cnter px-4 py-2 bg-white/60 reounded-2xl"
-          onClick={handleParkLocationClick}
-          style={{ position: "absolute", top: 10, left: "40%", zIndex: 999 }}
-        >
-          공원
-        </button>
-        <button
           className="flex justify-center items-center px-4 py-2 bg-white/60 rounded-2xl"
           onClick={handleCurrentLocationClick}
-          style={{ position: "absolute", top: 10, left: "50%", zIndex: 999 }}
+          style={{ position: "absolute", top: 10, left: "40%", zIndex: 999 }}
         >
           현재 위치
+        </button>
+        <button
+          className="flex justify-center items-cnter px-4 py-2 bg-white/60 rounded-2xl"
+          onClick={handleParkLocationClick}
+          style={{ position: "absolute", top: 10, left: "50%", zIndex: 999 }}
+        >
+          공원
         </button>
         <button
           className="felx justify-center items-center px-4 py-2 bg-white/60 rounded-2xl"
@@ -307,23 +399,6 @@ export default function MapComponent({
           동물병원
         </button>
       </div>
-
-      {modalData && (
-        <div className={styles.modal}>
-          <div className={styles.modal_content}>
-            <p className="text-xl font-bold">{modalData.title}</p>
-            <p>{modalData.region}</p>
-            <p>{modalData.address}</p>
-            <p>{modalData.phone}</p>
-            <button
-              className="m-5 px-5 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-              onClick={() => setModalData(null)}
-            >
-              닫기
-            </button>
-          </div>
-        </div>
-      )}
-    </>
+    </div>
   );
 }

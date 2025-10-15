@@ -36,7 +36,7 @@ const Header: React.FC<HeaderProps> = ( {isNavOpen, toggleNav}) => {
           <FiMenu className="text-3xl m-5" />
         </button>
       </div>
-      <div className="col-span-2 p-4">
+      <div className="col-span-2 p-0">
         {isNavOpen && <NavBar />}
       </div>
     </div>

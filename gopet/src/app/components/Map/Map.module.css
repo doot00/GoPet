@@ -1,19 +1,12 @@
 .modal {
     position: absolute;
-    display: hidden;
-    grid-template-columns: repeaf(5, 1fr);
-    grid-gap: 10px;
-    grid-auto-rows: minmax(100px, auto);
-    gap: 4;
     bottom: 0;
     left: 0;
     right: 0;
-    z-index: 50;
-    height: 35%;
     overflow: auto;
-    margin-left: -5px;
-    margin-right: -5px;
     box-sizing: border-box;
+    background: white;
+    border-radius: 30px;
 }
 
 

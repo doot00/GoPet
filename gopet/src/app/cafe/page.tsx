@@ -2,7 +2,7 @@
 
 import { useToggleNav } from "../components/hooks/useToggleNav";
 import Header from "../components/main/Header";
-import MapSection from "../components/Map/MapSection";
+import MapComponent from "../components/Map/MapComponent";
 
 const cafe = () => {
   const { isNavOpen, toggleNav} = useToggleNav(false);
@@ -10,7 +10,7 @@ const cafe = () => {
     <>
       <Header isNavOpen={isNavOpen} toggleNav={toggleNav}/>
       <div style={{ width: "100%", height: "950px"}}>
-        <MapSection/>   
+        <MapComponent/>   
       </div>
       
     </>
