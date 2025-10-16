@@ -1,8 +1,8 @@
 
 const KcisaApi = async(categoryFilter) => {
-    const hospital = `https://api.kcisa.kr/openapi/API_TOU_050/request?serviceKey=${process.env.NEXT_PUBLIC_KCISA_API_KEY}&type=json`;
+    const apiKey = `https://api.kcisa.kr/openapi/API_TOU_050/request?serviceKey=${process.env.NEXT_PUBLIC_KCISA_API_KEY}&type=json`;
     try {
-      const response = await fetch(hospital, {
+      const response = await fetch(apiKey, {
         headers: {
           Accept: "application/json", // JSON 요청
         },

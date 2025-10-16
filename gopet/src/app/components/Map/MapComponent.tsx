@@ -8,6 +8,8 @@ import { NaverMap } from "./types/map";
 import { GiRotaryPhone } from "react-icons/gi";
 import { AiOutlineEnvironment } from "react-icons/ai";
 import shelter from "../../../shelter.json";
+import SlideImageComponent from "./SlideImageComponent";
+
 
 type Props = {
   mapId?: string;
@@ -18,6 +20,14 @@ type Props = {
   address?: string;
   orders?: string;
 };
+
+type Place = {
+  lat: number;
+  lng: number;
+  photoUrl?: string;
+};
+
+
 
 export const INITIAL_CENTER: Coordinates = [37.5262411, 126.99289439];
 export const INITIAL_ZOOM = 10;
@@ -34,6 +44,9 @@ export default function MapComponent({
   const hasSetIdleListener = useRef(false);
   const [activeTab, setActiveTab] = useState(0);
   const [sidebarVisible, setSidebarVisible] = useState(true);
+  // 이미지 가져오기
+  const [places, setPlaces] = useState<Place[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // 모달
   const [modalData, setModalData] = useState<null | {
@@ -45,7 +58,6 @@ export default function MapComponent({
   }>(null);
 
   type PlaceType = "hospital" | "park" | "cafe" | "food" | "hotel";
-
   const markerIcons: Record<PlaceType, string> = {
     hospital: "/picture_images/map/animalhospital_marker.png",
     park: "/picture_images/map/park_marker.png",
@@ -53,10 +65,54 @@ export default function MapComponent({
     food: "/picture_images/map/food_marker.png",
     hotel: "/picture_images/map/hotel_marker.png",
   };
-  // 탭 버튼
-  const Tab = () => {
-    const tabs = [{ id: 0, name: "" }];
-  };
+
+  // slide image 
+
+  // 사이드바 탭
+  const tabs = [
+    {
+      id: 0,
+      name: "홈",
+      content: (
+        <>
+          <div className="flex justify-between items-center mb-4">
+              <div className="flex justify-center mb-4">
+                {modalData && (
+                  <>
+                  <div className="bg-white rounded-2xl p-4">
+                    <div className="flex">
+                      <SlideImageComponent/>
+                    </div>
+                    <p className="flex justify-center items-center text-xl font-bold m-3">
+                      {modalData.title}
+                    </p>
+                    <div className="flex">
+                      <span className="text-2xl">
+                        <AiOutlineEnvironment />
+                      </span>
+                      <span className="ml-2">{modalData.address}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="text-2xl">
+                        <GiRotaryPhone />
+                      </span>
+                      <span className="ml-2">{modalData.phone}</span>
+                    </div>
+                  </div>
+                  </>
+                )}
+              </div>
+            </div>
+        </>
+      ),
+    },
+    {
+      id: 1,
+      name: "정보",
+      content: <></>,
+    },
+  ];
+
   // 마커 버튼
   const showMarkers = async (type: PlaceType, keyword: string) => {
     const map = mapRef.current;
@@ -268,7 +324,7 @@ export default function MapComponent({
         <div
           className="w3-sidebar w3-white w3-bar-block"
           style={{
-            width: "25%",
+            width: "30%",
             backgroundColor: "#f3f4f6",
             opacity: 0.95,
             padding: "1rem",
@@ -278,57 +334,32 @@ export default function MapComponent({
             flexDirection: "column",
           }}
         >
-          {/* 상단 메뉴 + 닫기 버튼 */}
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex space-x-2">
-              <a
-                href="#"
-                className="w3-bar-item w3-button m-1 py-2 px-4 bg-white rounded-2xl hover:bg-gray-200"
+          <ul className="flex items-center mb-4">
+            {tabs.map((tab) => (
+              <li
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex space-x-2 w3-bar-item w3-button m-1 py-2 px-4 bg-white rounded-2xl hover:bg-gray-200 ${
+                  activeTab === tab.id ? "active bg-gray-300" : ""
+                }`}
               >
-                홈
-              </a>
-              <a
-                href="#"
-                className="w3-bar-item w3-button m-1 py-2 px-4 bg-white rounded-2xl hover:bg-gray-200"
+                {tab.name}
+              </li>
+            ))}
+            <div>
+              <button
+                className="relative justify-end w3-bar-item w3-button bg-blue-500 px-3 py-2 text-white rounded-2xl hover:bg-blue-600"
+                onClick={() => setSidebarVisible(false)}
               >
-                정보
-              </a>
+                닫기
+              </button>
             </div>
-            <button
-              className="w3-bar-item w3-button bg-blue-500 px-3 py-2 text-white rounded-2xl hover:bg-blue-600"
-              onClick={() => setSidebarVisible(false)}
-            >
-              닫기
-            </button>
-          </div>
-
-          {/* 이미지 */}
-          <div className="flex justify-center mb-4">
-            <img
-              src="/picture_images/festivallist/festival1.jpg"
-              alt="Festival"
-              className="rounded w-full max-h-80 object-cover"
-            />
-          </div>
-
-          {/* 모달 정보 */}
-          {modalData && (
-            <div className="bg-white rounded-2xl p-4">
-              <p className="flex justify-center items-center text-xl font-bold mb-3">{modalData.title}</p>
-              <div className="flex">
-                <span className="text-2xl">
-                  <AiOutlineEnvironment />
-                </span>
-                <span className="ml-2">{modalData.address}</span>
-              </div>
-              <div className="flex items-center">
-                <span className="text-2xl">
-                  <GiRotaryPhone />
-                </span>
-                <span className="ml-2">{modalData.phone}</span>
-              </div>
-            </div>
-          )}
+          </ul>
+          {tabs
+            .filter((tab) => activeTab === tab.id)
+            .map((tab) => (
+              <div key={tab.id}>{tab.content}</div>
+            ))}
         </div>
       )}
 
