@@ -21,7 +21,7 @@ const FestivalList = () => {
   return (
     <>
       <h1 className="text-3xl mt-10 p-10">🎉 이번달 축제 List</h1>
-      <div className="w-full flex justify-center items-center">
+      <div className="flex">
         <Swiper
           modules={[Pagination]}
           slidesPerView={2}
@@ -29,12 +29,12 @@ const FestivalList = () => {
           pagination={{ clickable: true }}
           loop={true}
           initialSlide={0}
-          centeredSlides={false}
-          style={{ width: "70%" }} // 넉넉하게 잡기
+          centeredSlides={true}
+          style={{ width: "68%" }} // 넉넉하게 잡기
         >
           {slideData.map((p, i) => (
             <SwiperSlide key={i}>
-              <div className="flex flex-col bg-yellow-300 rounded-3xl w-[500px] h-[250px]"
+              <div className="flex bg-yellow-300 rounded-3xl w-[600px] h-[300px]"
               >
                 <p className="text-black text-base p-4">API title값 불러오기</p>
               </div>
