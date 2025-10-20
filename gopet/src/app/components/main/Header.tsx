@@ -3,7 +3,6 @@
 import { FiMenu } from "react-icons/fi";
 import Link from "next/link";
 import Image from "next/image";
-import ListSearch from "./ListSearch";
 import NavBar from "./NavBar";
 type HeaderProps = {
   isNavOpen: boolean;
@@ -13,7 +12,7 @@ type HeaderProps = {
 
 const Header: React.FC<HeaderProps> = ( {isNavOpen, toggleNav}) => {
   return (
-    <div className="grid grid-rows-1 grid-cols-1 gap-4">
+    <div className="grid grid-rows-1 grid-cols-1 gap-4 m-5">
       <div className="flex items-center">
         <Link href="/">
           <div className="flex items-center">
@@ -27,9 +26,9 @@ const Header: React.FC<HeaderProps> = ( {isNavOpen, toggleNav}) => {
             <h1 className="ml-5 text-3xl">고 펫</h1>
           </div>
         </Link>
-        <div className="flex flex-grow justify-center m-5 items-center" >
+        {/* <div className="flex flex-grow justify-center m-5 items-center" >
             <ListSearch />
-        </div>
+        </div> */}
       </div>
       <div className="flex justify-end items-center">
         <button onClick={toggleNav}>

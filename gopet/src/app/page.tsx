@@ -1,9 +1,9 @@
 'use client';
 import LocalHotel from "./components/main/LocalHotel";
 import Adopt from "./components/main/Adopt";
-import FestivalList from "./components/main/FestivalList";
 import Header from "./components/main/Header";
 import { useToggleNav } from "./components/hooks/useToggleNav";
+import VolunteerList from "./components/main/VolunteerList";
 
 const Home = () => {
     const { isNavOpen, toggleNav} = useToggleNav(true);
@@ -11,7 +11,7 @@ const Home = () => {
         <>
             <Header isNavOpen={isNavOpen} toggleNav={toggleNav}/>
             <LocalHotel />
-            <FestivalList />
+            <VolunteerList />
             <Adopt />
         </>
     )

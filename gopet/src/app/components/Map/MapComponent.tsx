@@ -8,7 +8,6 @@ import { NaverMap } from "./types/map";
 import { GiRotaryPhone } from "react-icons/gi";
 import { AiOutlineEnvironment } from "react-icons/ai";
 import shelter from "../../../shelter.json";
-import SlideImageComponent from "./SlideImageComponent";
 
 
 type Props = {
@@ -81,16 +80,17 @@ export default function MapComponent({
                   <>
                   <div className="bg-white rounded-2xl p-4">
                     <div className="flex">
-                      <SlideImageComponent/>
+                      {/* <SlideImageComponent title={modalData.title}/> */}
+                      
                     </div>
-                    <p className="flex justify-center items-center text-xl font-bold m-3">
+                    <p className="flex justify-center items-center text-xl font-bold m-5">
                       {modalData.title}
                     </p>
                     <div className="flex">
                       <span className="text-2xl">
                         <AiOutlineEnvironment />
                       </span>
-                      <span className="ml-2">{modalData.address}</span>
+                      <span className="ml-2 mb-5">{modalData.address}</span>
                     </div>
                     <div className="flex items-center">
                       <span className="text-2xl">

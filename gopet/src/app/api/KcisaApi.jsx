@@ -17,8 +17,12 @@ const KcisaApi = async(categoryFilter) => {
           return true;
           })
         .map((item) => {
+          const title = item.title;
           const coord = item.coordinates;
           if (typeof coord !== "string") {
+            return null;
+          }
+          if (typeof title !== "string") {
             return null;
           }
           const tel = item.tel;

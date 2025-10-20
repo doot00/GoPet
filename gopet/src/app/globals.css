@@ -25,11 +25,6 @@ html, body {
     font-display: swap;
 }
 
-* {
-  margin-left: 5px;
-  margin-right: 5px;
-}
-
 .swiper-button-prev,
 .swiper-button-next {
     --swiper-theme-color: white;
