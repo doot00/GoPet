@@ -7,9 +7,12 @@ import { INITIAL_CENTER } from "../components/Map/MapComponent";
 import { GiRotaryPhone } from "react-icons/gi";
 import { AiOutlineEnvironment } from "react-icons/ai";
 import shelter from "../../shelter.json";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useToggleNav } from "../components/hooks/useToggleNav";
 import Header from "../components/main/Header";
+import volunteerlist from "../../volunteerwork.json";
+import { TiHeart } from "react-icons/ti";
+import Footer from "../components/main/Footer";
 
 type Props = {
   mapId?: string;
@@ -21,11 +24,19 @@ type Props = {
   orders?: string;
 };
 
-type Place = {
-  lat: number;
-  lng: number;
-  photoUrl?: string;
-};
+interface VolunData {
+  name: string;
+  title: string;
+  state: string;
+  begindate: string;
+  enddate: string;
+}
+
+interface ShelterData {
+  name: string;
+  address: string;
+  phone: string;
+}
 
 export default function Shelter({ mapId = "map", initialZoom = 10 }: Props) {
   const mapRef = useRef<naver.maps.Map | null>(null);
@@ -41,6 +52,28 @@ export default function Shelter({ mapId = "map", initialZoom = 10 }: Props) {
     phone: string;
   }>(null);
 
+  const [volunData, setVolunData] = useState<VolunData[]>([]);
+  useEffect(() => {
+    const volunData = volunteerlist.map((data: any) => ({
+      name: data.RECRUT_INST_NM,
+      title: data.SERVIC_TITLE,
+      state: data.RECRUT_STATE_NM,
+      begindate: data.SERVIC_BEGIN_DE,
+      enddate: data.SERVIC_END_DE,
+    }));
+    setVolunData(volunData);
+  }, []);
+
+  const [shelterData, setShelterData] = useState<ShelterData[]>([]);
+  useEffect(() => {
+    const shelterData = shelter.map((data: any) => ({
+      name: data.name,
+      address: data.address,
+      phone: data.phone,
+    }));
+    setShelterData(shelterData);
+  },[]);
+  
   // 사이드바 탭
   const tabs = [
     {
@@ -85,31 +118,28 @@ export default function Shelter({ mapId = "map", initialZoom = 10 }: Props) {
       content: (
         <>
           <div className="flex justify-center items-center mb-4">
-            <div className="flex justify-center items-center mb-4">
-              {modalData && (
-                <>
-                  <div
-                    className="bg-white flex justify-center items-center rounded-2xl p-4 mt-10"
-                    style={{ width: "480px", height: "160px" }}
-                  >
-                    <p className="flex justify-center items-center text-xl font-bold m-2">
-                      {modalData.title}
-                    </p>
-                    <div className="flex">
-                      <span className="text-2xl">
-                        <AiOutlineEnvironment />
-                      </span>
-                      <span className="ml-2">{modalData.address}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <span className="text-2xl">
-                        <GiRotaryPhone />
-                      </span>
-                      <span className="ml-2">{modalData.phone}</span>
-                    </div>
+            <div className="flex flex-col items-center mb-4 hide-scrollbar" style={{ height: '1000px', overflowY: 'scroll'}}>
+              {shelterData.map((data: any, index:any) => (
+                <div
+                  key={index}
+                  className="bg-white justify-center items-center rounded-2xl p-4 mt-10"
+                  style={{ width: "480px", height: "200px" }}
+                >
+                  <p className="flex justify-center items-center text-xl font-bold m-2">
+                    {data.name}
+                  </p>
+                  <div className="flex items-center">
+                    <span className="text-2xl">
+                      <AiOutlineEnvironment />
+                    </span>
+                    <span className="ml-2">{data.address}</span>
                   </div>
-                </>
-              )}
+                  <div className="flex items-center">
+                    <span className="ml-2">{data.phone}</span>
+                  </div>
+                  
+                </div>
+              ))}
             </div>
           </div>
         </>
@@ -118,12 +148,53 @@ export default function Shelter({ mapId = "map", initialZoom = 10 }: Props) {
     {
       id: 2,
       name: "봉사활동",
-      content: <>
-      
-      </>,
+      content: (
+        <>
+          <div className="flex justify-center items-center mb-4">
+            <div className="flex flex-col items-center mb-4 hide-scrollbar" style={{ height: '1000px', overflowY: 'scroll'}}>
+              {volunData.map((data: any, index:any) => (
+                <div
+                  key={index}
+                  className="bg-white justify-center items-center rounded-2xl p-4 mt-10"
+                  style={{ width: "480px", height: "200px" }}
+                >
+                  <p className="flex justify-center items-center text-xl font-bold m-2">
+                    {data.name}
+                  </p>
+                  <div className="flex">
+                    <span className="text-2xl">
+                      <TiHeart />
+                    </span>
+                    <span className="ml-2">{data.state}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="text-2xl">
+                      <AiOutlineEnvironment />
+                    </span>
+                    <span className="ml-2">{data.title}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span>
+                      봉사시작일자 :
+                    </span>
+                    <span className="ml-2">{data.begindate}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span>
+                      종료일자 : 
+                    </span>
+                    <span className="ml-2">{data.enddate}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      ),
     },
   ];
 
+  
   // 현재 위치 버튼
   const handleCurrentLocationClick = () => {
     if (!mapRef.current) return;
@@ -158,7 +229,6 @@ export default function Shelter({ mapId = "map", initialZoom = 10 }: Props) {
         },
       });
       // marker 클릭시 아니라 그냥 주소창을띄울 수 있도록
-
       naver.maps.Event.addListener(marker, "click", () => {
         const latlng = new naver.maps.LatLng(
           Number(data.lat),
@@ -176,6 +246,8 @@ export default function Shelter({ mapId = "map", initialZoom = 10 }: Props) {
       return marker;
     });
   };
+
+  
 
   // 지도 로딩 후 실행
   const initializeMap = () => {
@@ -254,7 +326,7 @@ export default function Shelter({ mapId = "map", initialZoom = 10 }: Props) {
   return (
     <>
       <Header isNavOpen={isNavOpen} toggleNav={toggleNav} />
-      <div style={{ display: "flex", width: "100%", height: "800px" }}>
+      <div style={{ display: "flex", width: "100%", height: "1200px" }}>
         {sidebarVisible && (
           <div
             className="w3-sidebar w3-white w3-bar-block"
@@ -264,7 +336,7 @@ export default function Shelter({ mapId = "map", initialZoom = 10 }: Props) {
               opacity: 0.95,
               padding: "1rem",
               position: "relative",
-              height: "800px",
+              height: "100%",
               display: "flex",
               flexDirection: "column",
             }}
@@ -302,7 +374,7 @@ export default function Shelter({ mapId = "map", initialZoom = 10 }: Props) {
         <div
           id={mapId}
           style={{
-            width: sidebarVisible ? "80%" : "100%",
+            width: "100%",
             height: "100%",
             position: "relative",
             transition: "width 0.3s ease",
@@ -331,6 +403,7 @@ export default function Shelter({ mapId = "map", initialZoom = 10 }: Props) {
           </button>
         </div>
       </div>
+      <Footer/>
     </>
   );
 }

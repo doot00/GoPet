@@ -1,24 +1,35 @@
 "use client";
 
-
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
+import { useEffect, useState } from "react";
+import { TiHeart } from "react-icons/ti";
+import { GiRotaryPhone } from "react-icons/gi";
+import { AiOutlineEnvironment } from "react-icons/ai";
+import volunteerlist from "../../../volunteerwork.json";
 
-interface Slide {
-  id: number;
-  image: string;
+interface VolunData {
+  name: string;
   title: string;
+  state: string;
+  begindate: string;
+  enddate: string;
 }
-const slideData: Slide[] = [
-  { id: 1, image: "/picture_images/festivallist/festival1.jpg", title: "1" },
-  { id: 2, image: "/picture_images/festivallist/festival2.jpg", title: "2" },
-  { id: 3, image: "/picture_images/festivallist/festival3.png", title: "3" },
-  { id: 4, image: "/picture_images/festivallist/festival3.jpg", title: "4" },
-  { id: 5, image: "/picture_images/festivallist/festival5.png", title: "5" },
-];
+
 const VolunteerList = () => {
+  const [volunData, setVolunData] = useState<VolunData[]>([]);
+  useEffect(() => {
+    const volunData = volunteerlist.map((data: any) => ({
+      name: data.RECRUT_INST_NM,
+      title: data.SERVIC_TITLE,
+      state: data.RECRUT_STATE_NM,
+      begindate: data.SERVIC_BEGIN_DE,
+      enddate: data.SERVIC_END_DE,
+    }));
+    setVolunData(volunData);
+  }, []);
 
   return (
     <>
@@ -30,16 +41,39 @@ const VolunteerList = () => {
           spaceBetween={0}
           pagination={{ clickable: true }}
           loop={true}
-          initialSlide={1}
+          initialSlide={0}
           centeredSlides={true}
           slidesOffsetBefore={5}
           slidesOffsetAfter={5} 
           style={{ width: "90%" }}
         >
-          {slideData.map((p, i) => (
+          {volunData.map((p, i) => (
             <SwiperSlide key={i}>
-              <div className="flex bg-yellow-300 rounded-3xl" style={{ width: "90%", height: "250px"}}>
-                <p className="text-black text-base p-4">API title값 불러오기</p>
+              <div className="rounded-3xl" style={{ width: "450px", height: "250px", backgroundColor: "rgba(253, 224, 71, 0.5)"}}>
+                <div className="ml-5 mr-5 text-xl">
+                  <h2 className="flex justify-center text-black text-2xl p-4">{p.name}</h2>
+                  <div className="flex">
+                    <span className="text-2xl">
+                      <TiHeart />
+                    </span>
+                    <span>{p.state}</span>
+                  </div>
+                  <div className="flex">
+                      <span>장 소 : {p.title}</span>
+                    </div>
+                    <div className="flex">
+                      <span>
+                        봉사시작일자 :
+                      </span>
+                      <span>{p.begindate}</span>
+                    </div>
+                    <div className="flex">
+                      <span>
+                        종료일자 : 
+                      </span>
+                      <span>{p.enddate}</span>
+                    </div>
+                </div>
               </div>
             </SwiperSlide>
           ))}

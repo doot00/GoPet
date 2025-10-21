@@ -35,10 +35,10 @@ export default function SwiperCarousel() {
         spaceBetween={0}
         initialSlide={0}
         centeredSlides={false}
-        slidesPerView={7.5}
+        slidesPerView={6}
         pagination={{ clickable: true }}
         autoplay={{ delay: 7000, disableOnInteraction: false }}
-        style={{ width: "90%"}}
+        style={{ width: "100%"}}
       >
           {slideData.map((p, i) => (
             <SwiperSlide key={i} className="overflow-hidden" style={{ width: "90%" }}>

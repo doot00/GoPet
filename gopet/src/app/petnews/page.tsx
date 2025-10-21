@@ -21,7 +21,7 @@ export default function PetNews() {
         const fetchData = async () => {
             setLoading(true);
             try {
-                const response = await axios.get("https://newsapi.org/v2/everything?q=반려동물&language=ko&sortBy=publishedAt&apiKey=318fa0d4e74f43f880ad2ce0960297a5")
+                const response = await axios.get("https://newsapi.org/v2/everything?q=반려동물+OR+강아지&language=ko&sortBy=publishedAt&apiKey=318fa0d4e74f43f880ad2ce0960297a5")
                 setArticles(response.data.articles);                
             } catch(e) {
                 console.log(e);
