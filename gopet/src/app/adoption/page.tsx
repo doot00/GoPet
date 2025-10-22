@@ -1,11 +1,121 @@
+"use client";
+import React, { useEffect, useState } from "react";
+import "swiper/css";
+import "swiper/css/pagination";
+import abandonani from "../../abandonanimal.json";
+import { useToggleNav } from "../components/hooks/useToggleNav";
+import Header from "../components/main/Header";
 
-const Adoption = () => {
-
-    return (
-        <>
-        
-        </>
-    )
+interface SlideData {
+  sigun: string;
+  state: string; // 보호중
+  begindate: number;
+  number: string;
+  enddate: number;
+  color: string;
+  age: string;
+  kg: any;
+  sex: string;
+  spray: string;
+  shelter: string;
+  address: string;
+  thnail: string; // 썸네일 이미지
+  img: any;
+  tel: string;
+  info: string;
 }
 
-export default Adoption;
+const Adaoption = () => {
+  const { isNavOpen, toggleNav } = useToggleNav(false);
+  const [adoptData, setAdoptData] = useState<SlideData[]>([]);
+
+  useEffect(() => {
+    const adoptData = (abandonani as any[])
+      .filter((data) => data.STATE_NM === "보호중")
+      .map((data: any) => ({
+        sigun: data.SIGUN_NM,
+        number: data.PBLANC_IDNTFY_ID,
+        state: data.STATE_NM, // 보호중
+        begindate: data.PBLANC_BEGIN_DE,
+        enddate: data.PBLANC_END_DE,
+        color: data.COLOR_NM,
+        age: data.AGE_INFO,
+        kg: data.BDWGH_INFO,
+        sex: data.SEX_NM,
+        info: data.SFETR_INFO,
+        spray: data.NTRZN_YN,
+        shelter: data.SLTR_NM,
+        addressgi: data.REFINE_ROADNM_ADDR,
+        address: data.REFINE_LOTNO_ADDR,
+        img: data.IMAGE_COURS,
+        thnail: data.THNAIL_IMAGE_COURS,
+        tel: data.SLTR_TELNO,
+      }));
+    setAdoptData(adoptData);
+  }, []);
+
+  return (
+    <>
+      <Header isNavOpen={isNavOpen} toggleNav={toggleNav} />
+      <div className="w-full relative overflow-visible mb-30">
+        <h1 className="text-3xl m-10">💗 유기동물 입양</h1>
+        <div className="flex flex-col justify-center items-center">
+          {adoptData.slice(0, 20).map((data: any, index: any) => (
+            <div
+              key={index}
+              className="flex items-start rounded-3xl mb-10 ml-10"
+              style={{
+                backgroundColor: "#f3f4f6",
+                width: "80%",
+                height: "400px",
+                padding: "10px",
+              }}
+            >
+              {/* 이미지 */}
+              <div className="flex flex-col items-start m-10 space-y-1" style={{ width: "350px" }}>
+                <div
+                  style={{
+                    backgroundImage: `url(${data.img})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    width: "300px",
+                    height: "300px",
+                    borderRadius: "10px",
+                  }}
+                />
+              </div>
+
+              <div className="w-px h-95 bg-gray-300" />
+              {/* 텍스트 */}
+              <div
+                className="flex flex-col items-start text-black text-base m-10 space-y-1"
+                style={{ width: "350px" }}
+              >
+                <p className="text-2xl">공고고유번호 : {data.number}</p>
+                <p>상 태 : {data.state}</p>
+                <p>나 이 : {data.age}</p>
+                <p>성 별 : {data.sex}</p>
+                <p>체 중 : {data.kg}</p>
+                <p>색 상 : {data.color}</p>
+                <p>특 징 : {data.info}</p>
+              </div>
+              <div className="w-px h-95 bg-gray-300" />
+              <div
+                className="flex flex-col items-start m-10 space-y-1"
+                style={{ width: "350px" }}
+              >
+                <p>보호소명 : {data.shelter}</p>
+                <p>보호소 전화번호 : {data.tel}</p>
+                <p>주 소 : {data.address}</p>
+                <p>공고시작일 : {data.begindate}</p>
+                <p>공고종료일 : {data.enddate}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default Adaoption;

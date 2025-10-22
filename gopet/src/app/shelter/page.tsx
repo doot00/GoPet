@@ -81,6 +81,7 @@ export default function Shelter({ mapId = "map", initialZoom = 10 }: Props) {
       name: "홈",
       content: (
         <>
+          <hr className="border-t border-gray-300 my-4" />
           <div className="flex justify-center items-center mb-4">
             <div className="flex justify-center items-center mb-4">
               {modalData && (
@@ -117,6 +118,7 @@ export default function Shelter({ mapId = "map", initialZoom = 10 }: Props) {
       name: "전체리스트",
       content: (
         <>
+          <hr className="border-t border-gray-300 my-4" />
           <div className="flex justify-center items-center mb-4">
             <div className="flex flex-col items-center mb-4 hide-scrollbar" style={{ height: '1000px', overflowY: 'scroll'}}>
               {shelterData.map((data: any, index:any) => (
@@ -150,6 +152,7 @@ export default function Shelter({ mapId = "map", initialZoom = 10 }: Props) {
       name: "봉사활동",
       content: (
         <>
+          <hr className="border-t border-gray-300 my-4" />
           <div className="flex justify-center items-center mb-4">
             <div className="flex flex-col items-center mb-4 hide-scrollbar" style={{ height: '1000px', overflowY: 'scroll'}}>
               {volunData.map((data: any, index:any) => (

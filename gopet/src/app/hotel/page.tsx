@@ -4,9 +4,9 @@ import Script from "next/script";
 import { Coordinates } from "../components/Map/types/store";
 import { NaverMap } from "../components/Map/types/map";
 import { INITIAL_CENTER } from "../components/Map/MapComponent";
-import { GiRotaryPhone } from "react-icons/gi";
 import { AiOutlineEnvironment } from "react-icons/ai";
-import { useEffect, useRef, useState } from "react";
+import { GiPositionMarker } from "react-icons/gi";
+import { useRef, useState } from "react";
 import { useToggleNav } from "../components/hooks/useToggleNav";
 import Header from "../components/main/Header";
 import Footer from "../components/main/Footer";
@@ -22,19 +22,16 @@ type Props = {
   orders?: string;
 };
 
-
-// interface ShelterData {
-//   name: string;
-//   address: string;
-//   phone: string;
-// }
+type RegionDataType = {
+  [sido: string]: string[];
+}
 
 export default function Hetel({ mapId = "map", initialZoom = 10 }: Props) {
+  const [cacheApi, setCacheApi] = useState<any[] | null>(null);
   const mapRef = useRef<naver.maps.Map | null>(null);
   const infoRaf = useRef<naver.maps.InfoWindow | null>(null);
   const markerRef = useRef<naver.maps.Marker[]>([]);
   const hasSetIdleListener = useRef(false);
-  const [kcisaData, setKcisaData] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState(0);
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const { isNavOpen, toggleNav } = useToggleNav(false);
@@ -48,22 +45,30 @@ export default function Hetel({ mapId = "map", initialZoom = 10 }: Props) {
     description?: string;
     phone: string;
   }>(null);
-  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // 지역
+  const [selectSido, setSelectSido] = useState("");
+  const [selectSigungu, setSelectSigungu] = useState("");
+  const regionData: RegionDataType = {
+  서울특별시: ['강남구', '강동구', '강북구', '강서구', '관악구', '광진구', '구로구', '금천구', '노원구', '도봉구', '동대문구', '동작구', '마포구', '서대문구', '서초구', '성동구', '성북구', '송파구', '양천구', '영등포구', '용산구', '은평구', '종로구', '중구', '중랑구'],
+  경기도: ['가평군', '고양시', '과천시', '광명시', '광주시', '구리시', '군포시', '김포시', '남양주시', '동두천시', '부천시', '성남시', '수원시', '시흥시', '안산시', '안성시', '안양시', '양주시', '양평군', '여주시', '연천군', '오산시', '용인시', '의왕시', '의정부시', '이천시', '파주시', '평택시', '포천시', '하남시', '화성시'],
+  인천광역시: ['중구', '동구', '미추홀구', '연수구', '남동구', '부평구', '계양구', '서구', '강화군', '옹진군'],
+  강원도: ['춘천시', '원주시', '강릉시', '동해시', '태백시', '속초시', '삼척시', '홍천군', '횡성군', '영월군', '평창군', '정선군', '철원군', '화천군', '양구군', '인제군', '고성군', '양양군'],
+  충청남도: ['청주시', '충주시', '제천시', '보은군', '옥천군', '영동군', '진천군', '괴산군', '음성군', '단양군', '증평군'],
+  전라북도: ['전주시', '군산시', '익산시', '정읍시', '남원시', '김제시', '완주군', '진안군', '무주군', '장수군', '임실군', '순창군', '고창군', '부안군'],
+  전라남도: ['목포시', '여수시', '순천시', '나주시', '광양시', '담양군', '곡성군', '구례군', '고흥군', '보성군', '화순군', '장흥군', '강진군', '해남군', '영암군', '무안군', '함평군', '영광군', '장성군', '완도군', '진도군', '신안군'],
+  경상북도: ['포항시', '경주시', '김천시', '안동시', '구미시', '영주시', '영천시', '상주시', '문경시', '경산시', '군위군', '의성군', '청송군', '영양군', '영덕군', '청도군', '고령군', '성주군', '칠곡군', '예천군', '봉화군', '울진군', '울릉군'],
+  경상남도: ['창원시', '진주시', '통영시', '사천시', '김해시', '밀양시', '거제시', '양산시', '의령군', '함안군', '창녕군', '고성군', '남해군', '하동군', '산청군', '함양군', '거창군', '합천군'],
+  제주특별자치도: ['제주시', '서귀포시'],
+};
+
+
   type PlaceType = "hotel";
   const markerIcons: Record<PlaceType, string> = {
     hotel: "/picture_images/map/hotel_marker.png",
   };
 
-  // const [shelterData, setShelterData] = useState<ShelterData[]>([]);
-  // useEffect(() => {
-  //   const shelterData = shelter.map((data: any) => ({
-  //     name: data.name,
-  //     address: data.address,
-  //     phone: data.phone,
-  //   }));
-  //   setShelterData(shelterData);
-  // },[]);
-  
   // 사이드바 탭
   const tabs = [
     {
@@ -71,6 +76,7 @@ export default function Hetel({ mapId = "map", initialZoom = 10 }: Props) {
       name: "홈",
       content: (
         <>
+          <hr className="border-t border-gray-300 my-4" />
           <div className="flex justify-center items-center mb-4">
             <div className="flex justify-center items-center mb-4">
               {modalData && (
@@ -82,6 +88,7 @@ export default function Hetel({ mapId = "map", initialZoom = 10 }: Props) {
                     <p className="flex justify-center items-center text-xl font-bold m-3">
                       {modalData.title}
                     </p>
+                    <hr className="border-t border-gray-300 my-4" />
                     <div className="flex">
                       <span className="text-2xl">
                         <AiOutlineEnvironment />
@@ -95,7 +102,10 @@ export default function Hetel({ mapId = "map", initialZoom = 10 }: Props) {
                       <span className="ml-2 mb-2">{modalData.charge}</span>
                     </div>
                     <div className="flex">
-                      <span className="ml-2 mb-2">웹사이트 : {modalData.url ? modalData.url : "정보가 없습니다."}</span>
+                      <span className="ml-2 mb-2">
+                        웹사이트 :{" "}
+                        {modalData.url ? modalData.url : "정보가 없습니다."}
+                      </span>
                     </div>
                     <div className="flex">
                       <span className="ml-2 mb-2">Tel : {modalData.phone}</span>
@@ -110,87 +120,40 @@ export default function Hetel({ mapId = "map", initialZoom = 10 }: Props) {
     },
     {
       id: 1,
-      name: "숙박리스트",
-      content: (
-         <>
-      {/* //     <div className="flex justify-center items-center mb-4">
-      //       <div className="flex flex-col items-center mb-4 hide-scrollbar" style={{ height: '1000px', overflowY: 'scroll'}}>
-      //         {shelterData.map((data: any, index:any) => (
-      //           <div
-      //             key={index}
-      //             className="bg-white justify-center items-center rounded-2xl p-4 mt-10"
-      //             style={{ width: "480px", height: "200px" }}
-      //           >
-      //             <p className="flex justify-center items-center text-xl font-bold m-2">
-      //               {data.name}
-      //             </p>
-      //             <div className="flex items-center">
-      //               <span className="text-2xl">
-      //                 <AiOutlineEnvironment />
-      //               </span>
-      //               <span className="ml-2">{data.address}</span>
-      //             </div>
-      //             <div className="flex items-center">
-      //               <span className="ml-2">{data.phone}</span>
-      //             </div>
-                  
-      //           </div>
-      //         ))}
-      //       </div>
-      //     </div> */}
-         </>
-       ),
-    },
-    {
-      id: 2,
       name: "지역별숙박",
       content: (
         <>
-    {/* //       <div className="flex justify-center items-center mb-4">
-    //         <div className="flex flex-col items-center mb-4 hide-scrollbar" style={{ height: '1000px', overflowY: 'scroll'}}>
-    //           {volunData.map((data: any, index:any) => (
-    //             <div
-    //               key={index}
-    //               className="bg-white justify-center items-center rounded-2xl p-4 mt-10"
-    //               style={{ width: "480px", height: "200px" }}
-    //             >
-    //               <p className="flex justify-center items-center text-xl font-bold m-2">
-    //                 {data.name}
-    //               </p>
-    //               <div className="flex">
-    //                 <span className="text-2xl">
-    //                   <TiHeart />
-    //                 </span>
-    //                 <span className="ml-2">{data.state}</span>
-    //               </div>
-    //               <div className="flex items-center">
-    //                 <span className="text-2xl">
-    //                   <AiOutlineEnvironment />
-    //                 </span>
-    //                 <span className="ml-2">{data.title}</span>
-    //               </div>
-    //               <div className="flex items-center">
-    //                 <span>
-    //                   봉사시작일자 :
-    //                 </span>
-    //                 <span className="ml-2">{data.begindate}</span>
-    //               </div>
-    //               <div className="flex items-center">
-    //                 <span>
-    //                   종료일자 : 
-    //                 </span>
-    //                 <span className="ml-2">{data.enddate}</span>
-    //               </div>
-    //             </div>
-    //           ))}
-    //         </div>
-           </div> */}
-         </>
-       ),
-     },
+          <hr className="border-t border-gray-300 my-4" />
+          <div className="flex">
+            <button
+              onClick={() => setIsModalOpen(true)}
+              data-modal-target="crud-modal"
+              data-modal-toggle="crud-modal"
+              className="flex block text-white bg-blue-500 hover:bg-blue-600 px-3 py-3 focus:outline-none rounded-2xl"
+              type="button"
+            >
+              <span className="text-2xl">
+                <GiPositionMarker />
+              </span>
+              지역
+            </button>
+            <div className="flex px-3 py-3 bg-white rounded-2xl ml-5">
+              <h2 className="flex justify-center items-center ml-10 mr-10">
+                
+              </h2>
+              <div className="w-px h-7 bg-gray-300" />
+              <h2 className="flex justify-center items-center ml-10 mr-10">
+                시군구
+              </h2>
+            </div>
+          </div>
+          <div className="flex justify-center items-center mb-4">
+          </div>
+        </>
+      ),
+    },
   ];
 
-  
   // 현재 위치 버튼
   const handleCurrentLocationClick = () => {
     if (!mapRef.current) return;
@@ -211,7 +174,7 @@ export default function Hetel({ mapId = "map", initialZoom = 10 }: Props) {
     }
   };
 
-  // 마커 버튼 
+  // 마커 버튼
   const showMarkers = async (type: PlaceType, keyword: string) => {
     const map = mapRef.current;
     if (!map) return;
@@ -223,7 +186,10 @@ export default function Hetel({ mapId = "map", initialZoom = 10 }: Props) {
       hasSetIdleListener.current = true;
     }
 
-    const results = await KcisaApi(keyword);
+    const results = cacheApi ?? (await KcisaApi(keyword));
+    if (!cacheApi) {
+      setCacheApi(results);
+    }
 
     const bounds = map.getBounds() as naver.maps.LatLngBounds;
     const sw = bounds.getSW();
@@ -271,7 +237,7 @@ export default function Hetel({ mapId = "map", initialZoom = 10 }: Props) {
           phone: item.tel,
           url: item.url,
           charge: item.charge,
-          description: item.description,         
+          description: item.description,
         });
       });
 
@@ -280,15 +246,11 @@ export default function Hetel({ mapId = "map", initialZoom = 10 }: Props) {
 
     // 기존 마커를 새 마커가 렌더된 후 제거
     markerRef.current.forEach((marker) => marker.setMap(null));
-
     // 마커 업데이트
     markerRef.current = newMarkers;
   };
   // 호텔 위치 버튼
   const handleHotelLocationClick = () => showMarkers("hotel", "펜션");
-  
-
-  
 
   // 지도 로딩 후 실행
   const initializeMap = () => {
@@ -372,7 +334,7 @@ export default function Hetel({ mapId = "map", initialZoom = 10 }: Props) {
           <div
             className="w3-sidebar w3-white w3-bar-block"
             style={{
-              width: "30%",
+              width: "40%",
               backgroundColor: "#f3f4f6",
               opacity: 0.95,
               padding: "1rem",
@@ -387,9 +349,8 @@ export default function Hetel({ mapId = "map", initialZoom = 10 }: Props) {
                 <li
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex space-x-2 w3-bar-item w3-button m-1 py-2 px-4 bg-white rounded-2xl hover:bg-gray-200 ${
-                    activeTab === tab.id ? "active bg-gray-300" : ""
-                  }`}
+                  className={`flex space-x-2 w3-bar-item w3-button m-1 py-2 px-4 bg-white rounded-2xl hover:bg-gray-200 
+                    ${activeTab === tab.id ? "active bg-gray-300" : ""}`}
                 >
                   {tab.name}
                 </li>
@@ -412,7 +373,7 @@ export default function Hetel({ mapId = "map", initialZoom = 10 }: Props) {
         )}
 
         {/* 지도영역 */}
-        <div
+        <div className={isModalOpen ? "opacity-40 pointer-events-none" : ''}
           id={mapId}
           style={{
             width: "100%",
@@ -444,7 +405,64 @@ export default function Hetel({ mapId = "map", initialZoom = 10 }: Props) {
           </button>
         </div>
       </div>
-      <Footer/>
+      <Footer />
+
+      {/* 지역 선택 모달 코드 */}
+
+      {isModalOpen && (
+        <form className="fixed inset-0 z-50 flex justify-center items-center bg-black/90">
+          {/* 시/도 선택 */}
+          <div className="bg-white p-6 rounded-lg w-full max-w-md">
+            <div className="flex justify-between items-center border-b pb-2 mb-5">
+            <label className="block mb-1 text-sm font-medium">지역</label>
+            </div>
+            <select
+              value={selectSido}
+              onChange={(e) => {
+                const newSido = e.target.value;
+                setSelectSido(newSido);
+                setSelectSigungu(""); // 시/도 바뀌면 시/군/구 초기화
+              }}
+              className="w-full border rounded px-3 py-2 mb-5"
+              >
+              <option value="">시/도 선택</option>
+              {Object.keys(regionData).map((sido) => (
+                <option key={sido} value={sido}>
+                  {sido}
+                </option>
+              ))}
+            </select>
+
+          {/* 시/군/구 선택 */}
+          <div className="mb-5">
+            <label className="block mb-1 text-sm font-medium">시/군/구</label>
+            <select
+              value={selectSigungu}
+              onChange={(e) => setSelectSigungu(e.target.value)}
+              className="w-full border rounded px-3 py-2"
+              disabled={!selectSido} // 시/도 선택 전에는 비활성화
+              >
+              <option value="">시/군/구 선택</option>
+              {selectSido &&
+                regionData[selectSido].map((sigungu) => (
+                  <option key={sigungu} value={sigungu}>
+                    {sigungu}
+                  </option>
+                ))}
+            </select>
+          </div>
+
+          {/* 확인 버튼 */}
+          <button
+            type="submit"
+            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+            disabled={!selectSido || !selectSigungu}
+            >
+            확인
+          </button>
+      </div>
+        </form>
+      )}
     </>
   );
 }

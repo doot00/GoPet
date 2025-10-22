@@ -6,8 +6,6 @@ import "swiper/css";
 import "swiper/css/pagination";
 import { useEffect, useState } from "react";
 import { TiHeart } from "react-icons/ti";
-import { GiRotaryPhone } from "react-icons/gi";
-import { AiOutlineEnvironment } from "react-icons/ai";
 import volunteerlist from "../../../volunteerwork.json";
 
 interface VolunData {
