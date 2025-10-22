@@ -37,19 +37,33 @@ const KcisaApi = async(categoryFilter) => {
           // N/E 제거하고 숫자만 추출
           const lat = parseFloat(parts[0].replace(/[^\d.-]/g, ""));
           const lng = parseFloat(parts[1].replace(/[^\d.-]/g, ""));
+
+          // addrss 분리하기
+          const address = item.address.split(" ");
+          if (address.length < 2) {
+            return null;
+          }
+          const address2 = address.replace(/\([0-9]+\)/, "").trim();
           
+          const sido = (address[1]);
+          const gungu = (address[2]);
+    
           if (isNaN(lat) || isNaN(lng)) return null;
           
           return {
+            sido,
+            gungu,
             title: item.title,
             lat,
             lng,
             address: item.address,
+            address2: address2,
             tel: item.tel,
             url: item.url,
             category2: item.category2,
             description: item.description,
             charge: item.charge,
+
           };
         })
         .filter(Boolean);

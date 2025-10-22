@@ -66,7 +66,7 @@ const Adaoption = () => {
               className="flex items-start rounded-3xl mb-10 ml-10"
               style={{
                 backgroundColor: "#f3f4f6",
-                width: "80%",
+                width: "70%",
                 height: "400px",
                 padding: "10px",
               }}
@@ -91,24 +91,24 @@ const Adaoption = () => {
                 className="flex flex-col items-start text-black text-base m-10 space-y-1"
                 style={{ width: "350px" }}
               >
-                <p className="text-2xl">공고고유번호 : {data.number}</p>
-                <p>상 태 : {data.state}</p>
-                <p>나 이 : {data.age}</p>
-                <p>성 별 : {data.sex}</p>
-                <p>체 중 : {data.kg}</p>
-                <p>색 상 : {data.color}</p>
-                <p>특 징 : {data.info}</p>
+                <p className="text-2xl mb-5">공고고유번호 : {data.number}</p>
+                <p className="mb-2">상 태 : {data.state}</p>
+                <p className="mb-2">나 이 : {data.age}</p>
+                <p className="mb-2">성 별 : {data.sex}</p>
+                <p className="mb-2">체 중 : {data.kg}</p>
+                <p className="mb-2">색 상 : {data.color}</p>
+                <p className="mb-2">특 징 : {data.info}</p>
               </div>
               <div className="w-px h-95 bg-gray-300" />
               <div
                 className="flex flex-col items-start m-10 space-y-1"
                 style={{ width: "350px" }}
               >
-                <p>보호소명 : {data.shelter}</p>
-                <p>보호소 전화번호 : {data.tel}</p>
-                <p>주 소 : {data.address}</p>
-                <p>공고시작일 : {data.begindate}</p>
-                <p>공고종료일 : {data.enddate}</p>
+                <p className="mb-2">보호소명 : {data.shelter}</p>
+                <p className="mb-2">보호소 전화번호 : {data.tel}</p>
+                <p className="mb-2">주 소 : {data.address}</p>
+                <p className="mb-2">공고시작일 : {data.begindate}</p>
+                <p className="mb-2">공고종료일 : {data.enddate}</p>
               </div>
             </div>
           ))}

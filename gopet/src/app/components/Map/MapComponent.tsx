@@ -44,8 +44,6 @@ export default function MapComponent({
   const [activeTab, setActiveTab] = useState(0);
   const [sidebarVisible, setSidebarVisible] = useState(true);
   // 이미지 가져오기
-  const [places, setPlaces] = useState<Place[]>([]);
-  const [loading, setLoading] = useState(true);
 
   // 모달
   const [modalData, setModalData] = useState<null | {
