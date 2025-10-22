@@ -7,7 +7,6 @@ import { Coordinates } from "./types/store";
 import { NaverMap } from "./types/map";
 import { GiRotaryPhone } from "react-icons/gi";
 import { AiOutlineEnvironment } from "react-icons/ai";
-import shelter from "../../../shelter.json";
 
 
 type Props = {
@@ -19,13 +18,6 @@ type Props = {
   address?: string;
   orders?: string;
 };
-
-type Place = {
-  lat: number;
-  lng: number;
-  photoUrl?: string;
-};
-
 
 
 export const INITIAL_CENTER: Coordinates = [37.5262411, 126.99289439];
@@ -47,20 +39,19 @@ export default function MapComponent({
 
   // 모달
   const [modalData, setModalData] = useState<null | {
-    type: "hospital" | "cafe" | "food" | "hotel" | "park" | "shelter";
+    type: "hospital" | "cafe" | "food" | "park";
     title: string;
     address?: string;
     region?: string;
     phone: string;
   }>(null);
 
-  type PlaceType = "hospital" | "park" | "cafe" | "food" | "hotel";
+  type PlaceType = "hospital" | "park" | "cafe" | "food";
   const markerIcons: Record<PlaceType, string> = {
     hospital: "/picture_images/map/animalhospital_marker.png",
     park: "/picture_images/map/park_marker.png",
     cafe: "/picture_images/map/cafe_marker.png",
     food: "/picture_images/map/food_marker.png",
-    hotel: "/picture_images/map/hotel_marker.png",
   };
 
   // slide image 
@@ -202,44 +193,11 @@ export default function MapComponent({
     }
   };
 
-  // 보호소 json파일 사용
-  const handleShelterLocationClick = () => {
-    const newMarkers = shelter.map((data) => {
-      const marker = new window.naver.maps.Marker({
-        position: new naver.maps.LatLng(Number(data.lat), Number(data.lng)),
-        map: mapRef.current!,
-        title: data.name,
-        icon: {
-          url: "/picture_images/map/shelter_marker.png",
-          scaledSize: new naver.maps.Size(50, 50),
-          anchor: new naver.maps.Point(25, 25),
-        },
-      });
-      // marker 클릭시 아니라 그냥 주소창을띄울 수 있도록
-
-      naver.maps.Event.addListener(marker, "click", () => {
-        const latlng = new naver.maps.LatLng(
-          Number(data.lat),
-          Number(data.lng)
-        );
-        searchCoordinateToAddress(latlng, data.name);
-        setModalData({
-          type: "shelter",
-          title: data.name,
-          region: data.region,
-          address: data.address,
-          phone: data.phone,
-        });
-      });
-      return marker;
-    });
-  };
 
   // 클릭 핸들러
   const handleHospitalLocationClick = () => showMarkers("hospital", "동물병원");
   const handleParkLocationClick = () => showMarkers("park", "여행지");
   const handleCafeLocationClick = () => showMarkers("cafe", "카페");
-  const handleHotelLocationClick = () => showMarkers("hotel", "펜션");
   const handleFoodLocationClick = () => showMarkers("food", "식당");
 
   // 지도 로딩 후 실행
@@ -380,13 +338,6 @@ export default function MapComponent({
         {/* 지도 마크 버튼 */}
         <button
           className="flex justify-center items-center px-4 py-2 bg-white/60 rounded-2xl"
-          onClick={handleHotelLocationClick}
-          style={{ position: "absolute", top: 10, left: "10%", zIndex: 999 }}
-        >
-          숙박
-        </button>
-        <button
-          className="flex justify-center items-center px-4 py-2 bg-white/60 rounded-2xl"
           onClick={handleCafeLocationClick}
           style={{ position: "absolute", top: 10, left: "20%", zIndex: 999 }}
         >
@@ -412,13 +363,6 @@ export default function MapComponent({
           style={{ position: "absolute", top: 10, left: "50%", zIndex: 999 }}
         >
           공원
-        </button>
-        <button
-          className="felx justify-center items-center px-4 py-2 bg-white/60 rounded-2xl"
-          onClick={handleShelterLocationClick}
-          style={{ position: "absolute", top: 10, left: "60%", zIndex: 999 }}
-        >
-          보호소
         </button>
         <button
           className="flex justify-center items-center px-4 py-2 bg-white/60 rounded-2xl"

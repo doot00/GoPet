@@ -11,7 +11,6 @@ import { useToggleNav } from "../components/hooks/useToggleNav";
 import Header from "../components/main/Header";
 import Footer from "../components/main/Footer";
 import KcisaApi from "../api/KcisaApi";
-import style from "../components/main/page.module.css";
 
 type Props = {
   mapId?: string;
@@ -32,11 +31,11 @@ interface HotelDataType {
   address: string;
   tel: string;
   url: string;
-  sido: string;
+  si: string;
   gungu: string;
 }
 
-export default function Hetel({ mapId = "map", initialZoom = 10 }: Props) {
+export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
   const [cacheApi, setCacheApi] = useState<any[] | null>(null);
   const mapRef = useRef<naver.maps.Map | null>(null);
   const infoRaf = useRef<naver.maps.InfoWindow | null>(null);
@@ -274,6 +273,8 @@ export default function Hetel({ mapId = "map", initialZoom = 10 }: Props) {
           .map((data: any) => {
             return {
               title: data.title,
+              si: data.si,
+              gungu: data.gungu,
               address: data.address,
               tel: data.tel,
               url: data.url,
@@ -287,19 +288,15 @@ export default function Hetel({ mapId = "map", initialZoom = 10 }: Props) {
     };
     fetchData();
   }, []);
-
-  // selectSido와 hotelData 에 있는 sido 일치하는지 확인해야 함
-  const filteredHotels = hotelData.filter((data) => {
-    return (
-      (!selectedLocation.sido || data.sido === selectedLocation.sido) &&
-      (!selectedLocation.gungu || data.gungu === selectedLocation.gungu)
-    );
-  });
-
   type PlaceType = "hotel";
   const markerIcons: Record<PlaceType, string> = {
     hotel: "/picture_images/map/hotel_marker.png",
   };
+
+  console.log(selectedLocation);
+  console.log(selectSido, selectSigungu);
+  
+  
 
   // 사이드바 탭
   const tabs = [
@@ -368,7 +365,6 @@ export default function Hetel({ mapId = "map", initialZoom = 10 }: Props) {
                 <GiPositionMarker className="mr-2 text-3xl" /> 지 역
               </span>
             </button>
-
             {selectedLocation.sido && selectedLocation.gungu && (
               <div className="flex px-3 py-3 bg-white rounded-2xl ml-5">
                 <h2 className="flex justify-center items-center ml-10 mr-10 text-2xl">
@@ -387,9 +383,7 @@ export default function Hetel({ mapId = "map", initialZoom = 10 }: Props) {
           >
             {hotelData
               .filter(
-                (data) =>
-                  data.sido === selectedLocation.sido &&
-                  data.gungu === selectedLocation.gungu
+                (data) => data.si === selectedLocation.sido && data.gungu === selectedLocation.gungu 
               )
               .map((data: any, index: any) => (
                 <div

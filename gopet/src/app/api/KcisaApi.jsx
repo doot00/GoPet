@@ -38,20 +38,21 @@ const KcisaApi = async(categoryFilter) => {
           const lat = parseFloat(parts[0].replace(/[^\d.-]/g, ""));
           const lng = parseFloat(parts[1].replace(/[^\d.-]/g, ""));
 
-          // addrss 분리하기
-          const address = item.address.split(" ");
-          if (address.length < 2) {
+          // 우편번호만 분리하기 
+          const address2 = item.address.replace(/\([0-9]+\)/, "").trim();
+          const addressParts = address2.split(" ");
+          const si = addressParts[0];
+          const gungu = addressParts[1];
+
+          if (addressParts.length < 2) {
             return null;
           }
-          const address2 = address.replace(/\([0-9]+\)/, "").trim();
           
-          const sido = (address[1]);
-          const gungu = (address[2]);
     
           if (isNaN(lat) || isNaN(lng)) return null;
           
           return {
-            sido,
+            si,
             gungu,
             title: item.title,
             lat,
