@@ -11,6 +11,7 @@ import { useToggleNav } from "../components/hooks/useToggleNav";
 import Header from "../components/main/Header";
 import Footer from "../components/main/Footer";
 import KcisaApi from "../api/KcisaApi";
+import { IoIosArrowForward } from "react-icons/io";
 
 type Props = {
   mapId?: string;
@@ -42,7 +43,6 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
   const markerRef = useRef<naver.maps.Marker[]>([]);
   const hasSetIdleListener = useRef(false);
   const [activeTab, setActiveTab] = useState(0);
-  const [sidebarVisible, setSidebarVisible] = useState(true);
   const { isNavOpen, toggleNav } = useToggleNav(false);
   const [modalData, setModalData] = useState<null | {
     type: "hotel";
@@ -58,6 +58,11 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const toggleOpen = () => setIsOpen((prev) => !prev);
+
+  // 현재 위치 on/off
+  const [currentOpen, setCurrentOpen] = useState(false);
+  const [ currentLocation, setCurrentLocation ] = useState<naver.maps.Marker | null>(null);
+
 
   // 모달 지역 선택
   const [selectSido, setSelectSido] = useState("");
@@ -309,9 +314,9 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
                 <>
                   <div
                     className="bg-white justify-center items-center rounded-2xl p-4 mt-10"
-                    style={{ width: "480px", height: "300px" }}
+                    style={{ width: "450px", height: "300px" }}
                   >
-                    <p className="flex justify-center items-center text-xl font-bold m-3">
+                    <p className="flex justify-center items-center text-xl font-bold m-2">
                       {modalData.title}
                     </p>
                     <hr className="border-t border-gray-300 my-4" />
@@ -363,7 +368,7 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
               </span>
             </button>
             {selectedLocation.sido && selectedLocation.gungu && (
-              <div className="flex px-3 py-3 bg-white rounded-2xl ml-5">
+              <div className="flex px-3 py-3 bg-white rounded-2xl">
                 <h2 className="flex justify-center items-center ml-10 mr-10 text-xl">
                   {selectedLocation.sido}
                 </h2>
@@ -388,7 +393,7 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
                 <div
                   key={index}
                   className="bg-white justify-center items-center rounded-2xl p-4 mt-10"
-                  style={{ width: "480px", height: "240px" }}
+                  style={{ width: "450px", height: "240px" }}
                 >
                   <p className="flex justify-center items-center text-xl font-bold m-3">
                     {data.title}
@@ -418,6 +423,7 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
 
   // 현재 위치 버튼
   const handleCurrentLocationClick = () => {
+  if (!currentOpen) {
     if (!mapRef.current) return;
 
     if (navigator.geolocation) {
@@ -426,15 +432,28 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
           position.coords.latitude,
           position.coords.longitude
         );
-        new naver.maps.Marker({
+
+        const marker = new naver.maps.Marker({
           position: currentLocation,
           map: mapRef.current!,
           title: "현재 위치",
         });
+
         mapRef.current!.setCenter(currentLocation);
+
+        setCurrentLocation(marker); // 마커 상태 저장
+        setCurrentOpen(true);      // 상태 ON
       });
     }
-  };
+  } else {
+    // 마커 제거
+    if (currentLocation) {
+      currentLocation.setMap(null);
+      setCurrentLocation(null);
+    }
+    setCurrentOpen(false);
+  }
+};
 
   // 마커 버튼
   const showMarkers = async (type: PlaceType, keyword: string) => {
@@ -593,62 +612,64 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
   return (
     <>
       <Header isNavOpen={isNavOpen} toggleNav={toggleNav} />
-      <div className="flex h-screen">
-        {/* 사이드바 */}
-      <div
-        className={`fixed h-full transition-transform duration-500 ease-in-out ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-        style={{ width: "90%", backgroundColor: "#f3f4f6", padding: "1rem", opacity: 0.95 }}
-      >
-          <div
-            className="w3-sidebar w3-white w3-bar-block"
-            style={{
-              width: "40%",
-              backgroundColor: "#f3f4f6",
-              opacity: 0.95,
-              padding: "1rem",
-              position: "relative",
-              height: "100%",
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
-            {/* flex px-3 py-3 bg-white rounded-2xl ml-5 */}
-            <ul className="flex justify-start items-center">
-              {tabs.map((tab) => (
-                <li
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex space-x-2 w3-bar-item w3-button ml-5 py-3 px-4 text-xl bg-white rounded-2xl hover:bg-gray-200 
-                      ${activeTab === tab.id ? "active bg-gray-300" : ""}`}
-                >
-                  {tab.name}
-                </li>
-              ))}
-            </ul>
-            {tabs
-              .filter((tab) => activeTab === tab.id)
-              .map((tab) => (
-                <div key={tab.id}>{tab.content}</div>
-              ))}
-          </div>
-        </div>
+        <div className="flex h-screen overflow-hidden">
+            {/* 사이드바 */}
+            <div
+              className={`fixed h-full transition-transform duration-500 ease-in-out ${
+                isOpen ? "translate-x-0" : "-translate-x-full"
+              }`}
+              style={{
+                width: "500px",
+                backgroundColor: "#f3f4f6",
+                padding: "1rem",
+                opacity: 0.95,
+                zIndex: 50,
+              }}
+            >
+              <div
+                className="w3-sidebar w3-white w3-bar-block"
+                style={{
+                  width: "100%",
+                  backgroundColor: "#f3f4f6",
+                  opacity: 0.95,
+                  padding: "1rem",
+                  position: "relative",
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <ul className="flex justify-start items-center">
+                  {tabs.map((tab) => (
+                    <li
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex space-x-2 w3-bar-item w3-button ml-5 py-3 px-4 text-xl bg-white rounded-2xl hover:bg-gray-200 
+                        ${activeTab === tab.id ? "active bg-gray-300" : ""}`}
+                    >
+                      {tab.name}
+                    </li>
+                  ))}
+                </ul>
+                {tabs
+                  .filter((tab) => activeTab === tab.id)
+                  .map((tab) => (
+                    <div key={tab.id}>{tab.content}</div>
+                  ))}
+              </div>
+            </div>
 
-        {/* 지도영역 */}
-        <div
-          className={`flex-1 transition-all duration-500 ${
-            isOpen ? "ml-130" : "ml-0"
-          }`}
-          style={{ backgroundColor: "#f3f4f6" }}
-        >
-          <button
-            className="m-4 mt-8 px-4 py-2 bg-gray-900 text-white hover:bg-gray-700 rounded"
-            onClick={toggleOpen}
-          >
-            ☰
-          </button>
-        </div>
+            {/* 사이드 바 옆 버튼*/}
+            <button
+              onClick={toggleOpen}
+              className="fixed top-35 left-0 z-40 bg-gray-900 text-white px-4 py-4 rounded hover:bg-gray-700 transition-all duration-500 ease-in-out"
+              style={{
+                transform: isOpen ? "translateX(510px)" : "translateX(0)", left: "-10px"
+              }}
+            >
+              <IoIosArrowForward />
+            </button>
+        
         <div
           className={isModalOpen ? "opacity-40 pointer-events-none" : ""}
           id={mapId}
@@ -681,7 +702,7 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
             숙박
           </button>
         </div>
-      </div>
+    
       <Footer />
 
       {/* 지역 선택 모달 코드 */}
@@ -745,6 +766,7 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
           </div>
         </form>
       )}
+      </div>
     </>
   );
 }
