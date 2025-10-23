@@ -350,7 +350,7 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
       content: (
         <>
           <hr className="border-t border-gray-300 my-4" />
-          <div className="flex mb-5">
+          <div className="flex justify-evenly mb-5">
             <button
               onClick={() => setIsModalOpen(true)}
               data-modal-target="crud-modal"
@@ -358,17 +358,17 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
               className="flex block text-white bg-blue-500 hover:bg-blue-600 px-3 py-3 focus:outline-none rounded-2xl"
               type="button"
             >
-              <span className="flex text-2xl mr-2">
+              <span className="flex text-xl mr-4">
                 <GiPositionMarker className="mr-2 text-3xl" /> 지 역
               </span>
             </button>
             {selectedLocation.sido && selectedLocation.gungu && (
               <div className="flex px-3 py-3 bg-white rounded-2xl ml-5">
-                <h2 className="flex justify-center items-center ml-10 mr-10 text-2xl">
+                <h2 className="flex justify-center items-center ml-10 mr-10 text-xl">
                   {selectedLocation.sido}
                 </h2>
                 <div className="w-px h-7 bg-gray-300" />
-                <h2 className="flex justify-center items-center ml-10 mr-10 text-2xl">
+                <h2 className="flex justify-center items-center ml-10 mr-10 text-xl">
                   {selectedLocation.gungu}
                 </h2>
               </div>
@@ -388,7 +388,7 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
                 <div
                   key={index}
                   className="bg-white justify-center items-center rounded-2xl p-4 mt-10"
-                  style={{ width: "480px", height: "300px" }}
+                  style={{ width: "480px", height: "240px" }}
                 >
                   <p className="flex justify-center items-center text-xl font-bold m-3">
                     {data.title}
@@ -614,12 +614,13 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
               flexDirection: "column",
             }}
           >
+            {/* flex px-3 py-3 bg-white rounded-2xl ml-5 */}
             <ul className="flex justify-start items-center">
               {tabs.map((tab) => (
                 <li
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex space-x-2 w3-bar-item w3-button m-1 py-2 px-4 bg-white rounded-2xl hover:bg-gray-200 
+                  className={`flex space-x-2 w3-bar-item w3-button ml-5 py-3 px-4 text-xl bg-white rounded-2xl hover:bg-gray-200 
                       ${activeTab === tab.id ? "active bg-gray-300" : ""}`}
                 >
                   {tab.name}
@@ -637,7 +638,7 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
         {/* 지도영역 */}
         <div
           className={`flex-1 transition-all duration-500 ${
-            isOpen ? "ml-125" : "ml-0"
+            isOpen ? "ml-130" : "ml-0"
           }`}
           style={{ backgroundColor: "#f3f4f6" }}
         >
