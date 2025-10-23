@@ -44,6 +44,14 @@ export default function Shelter({ mapId = "map", initialZoom = 10 }: Props) {
   const [activeTab, setActiveTab] = useState(0);
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const { isNavOpen, toggleNav } = useToggleNav(false);
+  // 현재위치 on/off 
+  const [currentOpen, setCurrentOpen] = useState(false);
+  const [ currentLocation, setCurrentLocation ] = useState<naver.maps.Marker | null>(null);
+
+  // 보호소 마커 on/off
+  const [isOpen, setIsOpen] = useState(false);
+  const [shelterMarkers, setShelterMarkers] = useState<naver.maps.Marker[]>([]);
+
   const [modalData, setModalData] = useState<null | {
     type: "shelter";
     title: string;
@@ -72,8 +80,8 @@ export default function Shelter({ mapId = "map", initialZoom = 10 }: Props) {
       phone: data.phone,
     }));
     setShelterData(shelterData);
-  },[]);
-  
+  }, []);
+
   // 사이드바 탭
   const tabs = [
     {
@@ -88,7 +96,7 @@ export default function Shelter({ mapId = "map", initialZoom = 10 }: Props) {
                 <>
                   <div
                     className="bg-white justify-center items-center rounded-2xl p-4 mt-10"
-                    style={{ width: "480px", height: "160px" }}
+                    style={{ width: "450px", height: "160px" }}
                   >
                     <p className="flex justify-center items-center text-xl font-bold m-2">
                       {modalData.title}
@@ -120,12 +128,15 @@ export default function Shelter({ mapId = "map", initialZoom = 10 }: Props) {
         <>
           <hr className="border-t border-gray-300 my-4" />
           <div className="flex justify-center items-center mb-4">
-            <div className="flex flex-col items-center mb-4 hide-scrollbar" style={{ height: '1000px', overflowY: 'scroll'}}>
-              {shelterData.map((data: any, index:any) => (
+            <div
+              className="flex flex-col items-center mb-4 hide-scrollbar"
+              style={{ height: "1000px", overflowY: "scroll" }}
+            >
+              {shelterData.map((data: any, index: any) => (
                 <div
                   key={index}
                   className="bg-white justify-center items-center rounded-2xl p-4 mt-10"
-                  style={{ width: "480px", height: "200px" }}
+                  style={{ width: "450px", height: "200px" }}
                 >
                   <p className="flex justify-center items-center text-xl font-bold m-2">
                     {data.name}
@@ -139,7 +150,6 @@ export default function Shelter({ mapId = "map", initialZoom = 10 }: Props) {
                   <div className="flex items-center">
                     <span className="ml-2">{data.phone}</span>
                   </div>
-                  
                 </div>
               ))}
             </div>
@@ -154,12 +164,15 @@ export default function Shelter({ mapId = "map", initialZoom = 10 }: Props) {
         <>
           <hr className="border-t border-gray-300 my-4" />
           <div className="flex justify-center items-center mb-4">
-            <div className="flex flex-col items-center mb-4 hide-scrollbar" style={{ height: '1000px', overflowY: 'scroll'}}>
-              {volunData.map((data: any, index:any) => (
+            <div
+              className="flex flex-col items-center mb-4 hide-scrollbar"
+              style={{ height: "1000px", overflowY: "scroll" }}
+            >
+              {volunData.map((data: any, index: any) => (
                 <div
                   key={index}
                   className="bg-white justify-center items-center rounded-2xl p-4 mt-10"
-                  style={{ width: "480px", height: "200px" }}
+                  style={{ width: "450px", height: "200px" }}
                 >
                   <p className="flex justify-center items-center text-xl font-bold m-2">
                     {data.name}
@@ -177,15 +190,11 @@ export default function Shelter({ mapId = "map", initialZoom = 10 }: Props) {
                     <span className="ml-2">{data.title}</span>
                   </div>
                   <div className="flex items-center">
-                    <span>
-                      봉사시작일자 :
-                    </span>
+                    <span>봉사시작일자 :</span>
                     <span className="ml-2">{data.begindate}</span>
                   </div>
                   <div className="flex items-center">
-                    <span>
-                      종료일자 : 
-                    </span>
+                    <span>종료일자 :</span>
                     <span className="ml-2">{data.enddate}</span>
                   </div>
                 </div>
@@ -197,9 +206,9 @@ export default function Shelter({ mapId = "map", initialZoom = 10 }: Props) {
     },
   ];
 
-  
   // 현재 위치 버튼
   const handleCurrentLocationClick = () => {
+  if (!currentOpen) {
     if (!mapRef.current) return;
 
     if (navigator.geolocation) {
@@ -208,49 +217,70 @@ export default function Shelter({ mapId = "map", initialZoom = 10 }: Props) {
           position.coords.latitude,
           position.coords.longitude
         );
-        new naver.maps.Marker({
+
+        const marker = new naver.maps.Marker({
           position: currentLocation,
           map: mapRef.current!,
           title: "현재 위치",
         });
+
         mapRef.current!.setCenter(currentLocation);
+
+        setCurrentLocation(marker); // 마커 상태 저장
+        setCurrentOpen(true);      // 상태 ON
       });
     }
-  };
+  } else {
+    // 마커 제거
+    if (currentLocation) {
+      currentLocation.setMap(null);
+      setCurrentLocation(null);
+    }
+    setCurrentOpen(false);
+  }
+};
 
   // 보호소 json파일 사용
   const handleShelterLocationClick = () => {
-    const newMarkers = shelter.map((data) => {
-      const marker = new window.naver.maps.Marker({
-        position: new naver.maps.LatLng(Number(data.lat), Number(data.lng)),
-        map: mapRef.current!,
-        title: data.name,
-        icon: {
-          url: "/picture_images/map/shelter_marker.png",
-          scaledSize: new naver.maps.Size(50, 50),
-          anchor: new naver.maps.Point(25, 25),
-        },
-      });
-      // marker 클릭시 아니라 그냥 주소창을띄울 수 있도록
-      naver.maps.Event.addListener(marker, "click", () => {
-        const latlng = new naver.maps.LatLng(
-          Number(data.lat),
-          Number(data.lng)
-        );
-        searchCoordinateToAddress(latlng, data.name);
-        setModalData({
-          type: "shelter",
+    if (!isOpen) {
+      const newMarkers = shelter.map((data) => {
+        const marker = new window.naver.maps.Marker({
+          position: new naver.maps.LatLng(Number(data.lat), Number(data.lng)),
+          map: mapRef.current!,
           title: data.name,
-          region: data.region,
-          address: data.address,
-          phone: data.phone,
+          icon: {
+            url: "/picture_images/map/shelter_marker.png",
+            scaledSize: new naver.maps.Size(50, 50),
+            anchor: new naver.maps.Point(25, 25),
+          },
         });
-      });
-      return marker;
-    });
-  };
 
-  
+        naver.maps.Event.addListener(marker, "click", () => {
+          const latlng = new naver.maps.LatLng(
+            Number(data.lat),
+            Number(data.lng)
+          );
+          searchCoordinateToAddress(latlng, data.name);
+          setModalData({
+            type: "shelter",
+            title: data.name,
+            region: data.region,
+            address: data.address,
+            phone: data.phone,
+          });
+        });
+
+        return marker;
+      });
+
+      setShelterMarkers(newMarkers);
+      setIsOpen(true);
+    } else {
+      shelterMarkers.forEach((marker) => marker.setMap(null));
+      setShelterMarkers([]);
+      setIsOpen(false);
+    }
+  };
 
   // 지도 로딩 후 실행
   const initializeMap = () => {
@@ -334,7 +364,7 @@ export default function Shelter({ mapId = "map", initialZoom = 10 }: Props) {
           <div
             className="w3-sidebar w3-white w3-bar-block"
             style={{
-              width: "30%",
+              width: "40%",
               backgroundColor: "#f3f4f6",
               opacity: 0.95,
               padding: "1rem",
@@ -391,22 +421,28 @@ export default function Shelter({ mapId = "map", initialZoom = 10 }: Props) {
 
           {/* 지도 마크 버튼 */}
           <button
-            className="flex justify-center items-center px-4 py-2 bg-white/60 rounded-2xl"
+            className={`flex justify-center items-center px-4 py-2 rounded-2xl transition ${currentOpen ? "bg-blue-500 text-white" : "bg-white/60 text-black" }`}
             onClick={handleCurrentLocationClick}
             style={{ position: "absolute", top: 10, left: "50%", zIndex: 999 }}
           >
-            현재 위치
+            {currentOpen ? "현재위치" : "현재위치"}
           </button>
           <button
-            className="felx justify-center items-center px-4 py-2 bg-white/60 rounded-2xl"
+            className={`flex justify-center items-center px-4 py-2 rounded-2xl transition
+            ${isOpen ? "bg-blue-500 text-white" : "bg-white/60 text-black"}`}
             onClick={handleShelterLocationClick}
-            style={{ position: "absolute", top: 10, left: "40%", zIndex: 999 }}
+            style={{
+              position: "absolute",
+              top: 10,
+              left: "40%",
+              zIndex: 999,
+            }}
           >
-            보호소
+            {isOpen ? "보호소" : "보호소"}
           </button>
         </div>
       </div>
-      <Footer/>
+      <Footer />
     </>
   );
 }

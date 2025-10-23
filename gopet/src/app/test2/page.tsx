@@ -11,8 +11,8 @@ export default function Sidebar() {
     <div className="flex">
       {/* Sidebar */}
       <div
-        className={`fixed top-0 left-0 h-full w-64 bg-gray-900 text-white z-50 transition-transform duration-500 ease-in-out ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
+        className={`fixed top-0 left-0 h-full w-64 bg-gray-900 text-white z-50 transition-transform duration-500 ease-in-out 
+          ${isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <button
@@ -49,10 +49,7 @@ export default function Sidebar() {
         >
           ☰
         </button>
-        <div className="p-4">
-          {/* Main content here */}
-          <h1 className="text-2xl font-bold">Welcome to the Main Area</h1>
-        </div>
+   
       </div>
     </div>
   );

@@ -262,7 +262,6 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
     gungu: string;
   }>({ sido: "", gungu: "" });
 
-  
   const [hotelData, setHotelData] = useState<HotelDataType[]>([]);
   useEffect(() => {
     const fetchData = async () => {
@@ -279,7 +278,7 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
               tel: data.tel,
               url: data.url,
               address2: data.address2,
-            }
+            };
           });
         setHotelData(hotelData);
       } catch (error) {
@@ -295,8 +294,6 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
 
   console.log(selectedLocation);
   console.log(selectSido, selectSigungu);
-  
-  
 
   // 사이드바 탭
   const tabs = [
@@ -383,7 +380,9 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
           >
             {hotelData
               .filter(
-                (data) => data.si === selectedLocation.sido && data.gungu === selectedLocation.gungu 
+                (data) =>
+                  data.si === selectedLocation.sido &&
+                  data.gungu === selectedLocation.gungu
               )
               .map((data: any, index: any) => (
                 <div
@@ -594,8 +593,14 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
   return (
     <>
       <Header isNavOpen={isNavOpen} toggleNav={toggleNav} />
-      <div style={{ display: "flex", width: "100%", height: "1200px" }}>
-        {sidebarVisible && (
+      <div className="flex h-screen">
+        {/* 사이드바 */}
+      <div
+        className={`fixed h-full transition-transform duration-500 ease-in-out ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+        style={{ width: "90%", backgroundColor: "#f3f4f6", padding: "1rem", opacity: 0.95 }}
+      >
           <div
             className="w3-sidebar w3-white w3-bar-block"
             style={{
@@ -609,37 +614,17 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
               flexDirection: "column",
             }}
           >
-            <ul className="flex justify-between items-center">
+            <ul className="flex justify-start items-center">
               {tabs.map((tab) => (
                 <li
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex space-x-2 w3-bar-item w3-button m-1 py-2 px-4 bg-white rounded-2xl hover:bg-gray-200 
-                    ${activeTab === tab.id ? "active bg-gray-300" : ""}`}
+                      ${activeTab === tab.id ? "active bg-gray-300" : ""}`}
                 >
                   {tab.name}
                 </li>
               ))}
-              {/* <div>
-                <button
-                  className="relative justify-end w3-bar-item w3-button bg-blue-500 px-3 py-2 text-white rounded-2xl hover:bg-blue-600"
-                  onClick={() => setSidebarVisible(false)}
-                >
-                  닫기
-                </button>
-              </div> */}
-              <div
-                className={`flex-1 transition-all duration-500 ${
-                  isOpen ? "ml-64" : "ml-0"
-                }`}
-              >
-                <button
-                  className="m-4 px-4 py-2 bg-gray-900 text-white hover:bg-gray-700 rounded"
-                  onClick={toggleOpen}
-                >
-                  ☰
-                </button>
-              </div>
             </ul>
             {tabs
               .filter((tab) => activeTab === tab.id)
@@ -647,9 +632,22 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
                 <div key={tab.id}>{tab.content}</div>
               ))}
           </div>
-        )}
+        </div>
 
         {/* 지도영역 */}
+        <div
+          className={`flex-1 transition-all duration-500 ${
+            isOpen ? "ml-125" : "ml-0"
+          }`}
+          style={{ backgroundColor: "#f3f4f6" }}
+        >
+          <button
+            className="m-4 mt-8 px-4 py-2 bg-gray-900 text-white hover:bg-gray-700 rounded"
+            onClick={toggleOpen}
+          >
+            ☰
+          </button>
+        </div>
         <div
           className={isModalOpen ? "opacity-40 pointer-events-none" : ""}
           id={mapId}
@@ -675,7 +673,7 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
             현재 위치
           </button>
           <button
-            className="felx justify-center items-center px-4 py-2 bg-white/60 rounded-2xl"
+            className="flex justify-center items-center px-4 py-2 bg-white/60 rounded-2xl"
             onClick={handleHotelLocationClick}
             style={{ position: "absolute", top: 10, left: "40%", zIndex: 999 }}
           >
