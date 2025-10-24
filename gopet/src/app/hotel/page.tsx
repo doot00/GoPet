@@ -61,8 +61,8 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
 
   // 현재 위치 on/off
   const [currentOpen, setCurrentOpen] = useState(false);
-  const [ currentLocation, setCurrentLocation ] = useState<naver.maps.Marker | null>(null);
-
+  const [currentLocation, setCurrentLocation] =
+    useState<naver.maps.Marker | null>(null);
 
   // 모달 지역 선택
   const [selectSido, setSelectSido] = useState("");
@@ -392,7 +392,7 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
               .map((data: any, index: any) => (
                 <div
                   key={index}
-                  className="bg-white justify-center items-center rounded-2xl p-4 mt-10"
+                  className="bg-white justify-center items-center rounded-2xl p-4 mt-10 mb-10"
                   style={{ width: "450px", height: "240px" }}
                 >
                   <p className="flex justify-center items-center text-xl font-bold m-3">
@@ -423,37 +423,37 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
 
   // 현재 위치 버튼
   const handleCurrentLocationClick = () => {
-  if (!currentOpen) {
-    if (!mapRef.current) return;
+    if (!currentOpen) {
+      if (!mapRef.current) return;
 
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((position) => {
-        const currentLocation = new naver.maps.LatLng(
-          position.coords.latitude,
-          position.coords.longitude
-        );
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+          const currentLocation = new naver.maps.LatLng(
+            position.coords.latitude,
+            position.coords.longitude
+          );
 
-        const marker = new naver.maps.Marker({
-          position: currentLocation,
-          map: mapRef.current!,
-          title: "현재 위치",
+          const marker = new naver.maps.Marker({
+            position: currentLocation,
+            map: mapRef.current!,
+            title: "현재 위치",
+          });
+
+          mapRef.current!.setCenter(currentLocation);
+
+          setCurrentLocation(marker); // 마커 상태 저장
+          setCurrentOpen(true); // 상태 ON
         });
-
-        mapRef.current!.setCenter(currentLocation);
-
-        setCurrentLocation(marker); // 마커 상태 저장
-        setCurrentOpen(true);      // 상태 ON
-      });
+      }
+    } else {
+      // 마커 제거
+      if (currentLocation) {
+        currentLocation.setMap(null);
+        setCurrentLocation(null);
+      }
+      setCurrentOpen(false);
     }
-  } else {
-    // 마커 제거
-    if (currentLocation) {
-      currentLocation.setMap(null);
-      setCurrentLocation(null);
-    }
-    setCurrentOpen(false);
-  }
-};
+  };
 
   // 마커 버튼
   const showMarkers = async (type: PlaceType, keyword: string) => {
@@ -612,70 +612,77 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
   return (
     <>
       <Header isNavOpen={isNavOpen} toggleNav={toggleNav} />
-        <div className="flex h-screen overflow-hidden">
-            {/* 사이드바 */}
-            <div
-              className={`fixed h-full transition-transform duration-500 ease-in-out ${
-                isOpen ? "translate-x-0" : "-translate-x-full"
-              }`}
-              style={{
-                width: "500px",
-                backgroundColor: "#f3f4f6",
-                padding: "1rem",
-                opacity: 0.95,
-                zIndex: 50,
-              }}
-            >
-              <div
-                className="w3-sidebar w3-white w3-bar-block"
-                style={{
-                  width: "100%",
-                  backgroundColor: "#f3f4f6",
-                  opacity: 0.95,
-                  padding: "1rem",
-                  position: "relative",
-                  height: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                }}
-              >
-                <ul className="flex justify-start items-center">
-                  {tabs.map((tab) => (
-                    <li
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`flex space-x-2 w3-bar-item w3-button ml-5 py-3 px-4 text-xl bg-white rounded-2xl hover:bg-gray-200 
-                        ${activeTab === tab.id ? "active bg-gray-300" : ""}`}
-                    >
-                      {tab.name}
-                    </li>
-                  ))}
-                </ul>
-                {tabs
-                  .filter((tab) => activeTab === tab.id)
-                  .map((tab) => (
-                    <div key={tab.id}>{tab.content}</div>
-                  ))}
-              </div>
-            </div>
-
-            {/* 사이드 바 옆 버튼*/}
-            <button
-              onClick={toggleOpen}
-              className="fixed top-35 left-0 z-40 bg-gray-900 text-white px-4 py-4 rounded hover:bg-gray-700 transition-all duration-500 ease-in-out"
-              style={{
-                transform: isOpen ? "translateX(510px)" : "translateX(0)", left: "-10px"
-              }}
-            >
-              <IoIosArrowForward />
-            </button>
-        
+      <div className="flex h-screen w-full overflow-hidden">
+        {/* 사이드바 */}
         <div
-          className={isModalOpen ? "opacity-40 pointer-events-none" : ""}
+          className={`flex transition-all duration-500 mb-10 ease-in-out ${
+            isOpen ? "w-[700px]" : "w-0"
+          }`}
+          style={{
+            backgroundColor: "#f3f4f6",
+            overflowY: "auto",
+          }}
+        >
+          <div
+            className="w3-sidebar w3-white w3-bar-block"
+            style={{
+              width: "500px",
+              backgroundColor: "#f3f4f6",
+              opacity: 0.95,
+              padding: "1rem",
+              position: "relative",
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <ul className="flex justify-start items-center">
+              {tabs.map((tab) => (
+                <li
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex space-x-2 w3-bar-item w3-button ml-5 py-3 px-4 text-xl bg-white rounded-2xl hover:bg-gray-200 
+                        ${activeTab === tab.id ? "active bg-gray-300" : ""}`}
+                >
+                  {tab.name}
+                </li>
+              ))}
+            </ul>
+            {tabs
+              .filter((tab) => activeTab === tab.id)
+              .map((tab) => (
+                <div key={tab.id}>{tab.content}</div>
+              ))}
+          </div>
+        </div>
+
+        {/* 사이드 바 옆 버튼*/}
+        <button
+          onClick={toggleOpen}
+          className="absolute top-50 left-0 z-50 flex items-center justify-center
+             bg-gray-900 text-white px-4 py-4 rounded hover:bg-gray-700
+             transition-all duration-500 ease-in-out"
+          style={{
+       // 버튼 폭 고정
+            transform: `translateY(-50%) ${
+              isOpen ? "translateX(495px)" : "translateX(0)"
+            }`,
+          }}
+        >
+          <IoIosArrowForward
+            style={{
+              transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
+              transition: "transform 0.3s ease",
+            }}
+          />
+        </button>
+
+        <div
+          className="flex relative transition-all duration-500 ease-in-out"
           id={mapId}
           style={{
             width: "100%",
-            height: "100%",
+            height: "1000px",
             position: "relative",
             transition: "width 0.3s ease",
           }}
@@ -702,70 +709,75 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
             숙박
           </button>
         </div>
-    
-      <Footer />
 
-      {/* 지역 선택 모달 코드 */}
+        <Footer />
 
-      {isModalOpen && (
-        <form className="fixed inset-0 z-50 flex justify-center items-center bg-black/90">
-          {/* 시/도 선택 */}
-          <div className="bg-white p-6 rounded-lg w-full max-w-md">
-            <div className="flex justify-between items-center border-b pb-2 mb-5">
-              <label className="block mb-1 text-sm font-medium">지역</label>
-            </div>
-            <select
-              value={selectSido}
-              onChange={(e) => {
-                const newSido = e.target.value;
-                setSelectSido(newSido);
-                setSelectSigungu(""); // 시/도 바뀌면 시/군/구 초기화
-              }}
-              className="w-full border rounded px-3 py-2 mb-5"
-            >
-              <option value="">시/도 선택</option>
-              {Object.keys(regionData).map((sido) => (
-                <option key={sido} value={sido}>
-                  {sido}
-                </option>
-              ))}
-            </select>
+        {/* 지역 선택 모달 코드 */}
 
-            {/* 시/군/구 선택 */}
-            <div className="mb-5">
-              <label className="block mb-1 text-sm font-medium">시/군/구</label>
+        {isModalOpen && (
+          <form className="fixed inset-0 z-50 flex justify-center items-center bg-black/90">
+            {/* 시/도 선택 */}
+            <div className="bg-white p-6 rounded-lg w-full max-w-md">
+              <div className="flex justify-between items-center border-b pb-2 mb-5">
+                <label className="block mb-1 text-sm font-medium">지역</label>
+              </div>
               <select
-                value={selectSigungu}
-                onChange={(e) => setSelectSigungu(e.target.value)}
-                className="w-full border rounded px-3 py-2"
-                disabled={!selectSido} // 시/도 선택 전에는 비활성화
+                value={selectSido}
+                onChange={(e) => {
+                  const newSido = e.target.value;
+                  setSelectSido(newSido);
+                  setSelectSigungu(""); // 시/도 바뀌면 시/군/구 초기화
+                }}
+                className="w-full border rounded px-3 py-2 mb-5"
               >
-                <option value="">시/군/구 선택</option>
-                {selectSido &&
-                  regionData[selectSido].map((sigungu) => (
-                    <option key={sigungu} value={sigungu}>
-                      {sigungu}
-                    </option>
-                  ))}
+                <option value="">시/도 선택</option>
+                {Object.keys(regionData).map((sido) => (
+                  <option key={sido} value={sido}>
+                    {sido}
+                  </option>
+                ))}
               </select>
-            </div>
 
-            {/* 확인 버튼 */}
-            <button
-              type="submit"
-              onClick={(e) => {
-                e.preventDefault(); // 폼 제출 방지
-                setSelectedLocation({ sido: selectSido, gungu: selectSigungu });
-                setIsModalOpen(false);
-              }}
-              className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
-              disabled={!selectSido || !selectSigungu}
-            >
-              확인
-            </button>
-          </div>
-        </form>
-      )}
+              {/* 시/군/구 선택 */}
+              <div className="mb-5">
+                <label className="block mb-1 text-sm font-medium">
+                  시/군/구
+                </label>
+                <select
+                  value={selectSigungu}
+                  onChange={(e) => setSelectSigungu(e.target.value)}
+                  className="w-full border rounded px-3 py-2"
+                  disabled={!selectSido} // 시/도 선택 전에는 비활성화
+                >
+                  <option value="">시/군/구 선택</option>
+                  {selectSido &&
+                    regionData[selectSido].map((sigungu) => (
+                      <option key={sigungu} value={sigungu}>
+                        {sigungu}
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              {/* 확인 버튼 */}
+              <button
+                type="submit"
+                onClick={(e) => {
+                  e.preventDefault(); // 폼 제출 방지
+                  setSelectedLocation({
+                    sido: selectSido,
+                    gungu: selectSigungu,
+                  });
+                  setIsModalOpen(false);
+                }}
+                className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+                disabled={!selectSido || !selectSigungu}
+              >
+                확인
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </>
   );
