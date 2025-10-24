@@ -360,15 +360,15 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
               onClick={() => setIsModalOpen(true)}
               data-modal-target="crud-modal"
               data-modal-toggle="crud-modal"
-              className="flex block text-white bg-blue-500 hover:bg-blue-600 px-3 py-3 focus:outline-none rounded-2xl"
+              className="flex block text-white bg-blue-500 hover:bg-blue-600 px-2 py-2 focus:outline-none rounded-2xl"
               type="button"
             >
-              <span className="flex text-xl mr-4">
-                <GiPositionMarker className="mr-2 text-3xl" /> 지 역
+              <span className="flex text-xl mr-2">
+                <GiPositionMarker className="mr-2 text-2xl" /> 지 역
               </span>
             </button>
             {selectedLocation.sido && selectedLocation.gungu && (
-              <div className="flex px-3 py-3 bg-white rounded-2xl">
+              <div className="flex px-2 py-2 bg-white rounded-2xl">
                 <h2 className="flex justify-center items-center ml-10 mr-10 text-xl">
                   {selectedLocation.sido}
                 </h2>
@@ -641,7 +641,7 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
                 <li
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex space-x-2 w3-bar-item w3-button ml-5 py-3 px-4 text-xl bg-white rounded-2xl hover:bg-gray-200 
+                  className={`flex space-x-2 w3-bar-item w3-button ml-5 py-2 px-3 text-xl bg-white rounded-2xl hover:bg-gray-200 
                         ${activeTab === tab.id ? "active bg-gray-300" : ""}`}
                 >
                   {tab.name}
@@ -715,7 +715,7 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
         {/* 지역 선택 모달 코드 */}
 
         {isModalOpen && (
-          <form className="fixed inset-0 z-50 flex justify-center items-center bg-black/90">
+          <form className="fixed inset-0 z-1000 flex justify-center items-center bg-black/90">
             {/* 시/도 선택 */}
             <div className="bg-white p-6 rounded-lg w-full max-w-md">
               <div className="flex justify-between items-center border-b pb-2 mb-5">
