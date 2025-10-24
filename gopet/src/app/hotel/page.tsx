@@ -28,7 +28,6 @@ type RegionDataType = {
 };
 
 interface HotelDataType {
-  string: string;
   address: string;
   tel: string;
   url: string;
@@ -41,6 +40,7 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
   const mapRef = useRef<naver.maps.Map | null>(null);
   const infoRaf = useRef<naver.maps.InfoWindow | null>(null);
   const markerRef = useRef<naver.maps.Marker[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
   const hasSetIdleListener = useRef(false);
   const [activeTab, setActiveTab] = useState(0);
   const { isNavOpen, toggleNav } = useToggleNav(false);
@@ -56,13 +56,15 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
   }>(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
   const toggleOpen = () => setIsOpen((prev) => !prev);
-
+  
   // 현재 위치 on/off
   const [currentOpen, setCurrentOpen] = useState(false);
   const [currentLocation, setCurrentLocation] =
-    useState<naver.maps.Marker | null>(null);
+  useState<naver.maps.Marker | null>(null);
+  
+  // 호텔 마커 On/off
+  const [hotelMarkers, setHotelMarkers] = useState<naver.maps.Marker[]>([]);
 
   // 모달 지역 선택
   const [selectSido, setSelectSido] = useState("");
@@ -292,13 +294,11 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
     };
     fetchData();
   }, []);
+
   type PlaceType = "hotel";
   const markerIcons: Record<PlaceType, string> = {
     hotel: "/picture_images/map/hotel_marker.png",
   };
-
-  console.log(selectedLocation);
-  console.log(selectSido, selectSigungu);
 
   // 사이드바 탭
   const tabs = [
@@ -457,80 +457,89 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
 
   // 마커 버튼
   const showMarkers = async (type: PlaceType, keyword: string) => {
-    const map = mapRef.current;
-    if (!map) return;
+    if(!isOpen) {
 
-    if (!hasSetIdleListener.current) {
-      window.naver.maps.Event.addListener(map, "idle", () => {
-        showMarkers(type, keyword);
-      });
-      hasSetIdleListener.current = true;
-    }
-
-    // results 값으로 가져와야 하니까
-
-    const results = cacheApi ?? (await KcisaApi(keyword));
-    if (!cacheApi) {
-      setCacheApi(results);
-    }
-
-    const bounds = map.getBounds() as naver.maps.LatLngBounds;
-    const sw = bounds.getSW();
-    const ne = bounds.getNE();
-
-    const filtered = results.filter((item: any) => {
-      const lat = parseFloat(item.lat);
-      const lng = parseFloat(item.lng);
-      return (
-        !isNaN(lat) &&
-        !isNaN(lng) &&
-        lat >= sw.lat() &&
-        lat <= ne.lat() &&
-        lng >= sw.lng() &&
-        lng <= ne.lng()
-      );
-    });
-
-    const newMarkers: naver.maps.Marker[] = [];
-
-    // 마커생성
-    filtered.forEach((item: any) => {
-      const marker = new window.naver.maps.Marker({
-        position: new window.naver.maps.LatLng(item.lat, item.lng),
-        map,
-        title: item.title,
-        icon: {
-          url: markerIcons[type],
-          scaledSize: new window.naver.maps.Size(50, 50),
-          anchor: new window.naver.maps.Point(25, 25),
-        },
-      });
-
-      window.naver.maps.Event.addListener(marker, "click", async () => {
-        const latlng = new window.naver.maps.LatLng(item.lat, item.lng);
-        const { address, cityName } = await searchCoordinateToAddress(
-          latlng,
-          item.title
-        );
-        setModalData({
-          type,
-          title: item.title,
-          address: address,
-          region: cityName,
-          phone: item.tel,
-          url: item.url,
-          charge: item.charge,
-          description: item.description,
+      const map = mapRef.current;
+      if (!map) return;
+      
+      if (!hasSetIdleListener.current) {
+        window.naver.maps.Event.addListener(map, "idle", () => {
+          showMarkers(type, keyword);
         });
+        hasSetIdleListener.current = true;
+      }
+      
+      // results 값으로 가져와야 하니까
+      
+      const results = cacheApi ?? (await KcisaApi(keyword));
+      if (!cacheApi) {
+        setCacheApi(results);
+      }
+      
+      const bounds = map.getBounds() as naver.maps.LatLngBounds;
+      const sw = bounds.getSW();
+      const ne = bounds.getNE();
+      
+      const filtered = results.filter((item: any) => {
+        const lat = parseFloat(item.lat);
+        const lng = parseFloat(item.lng);
+        return (
+          !isNaN(lat) &&
+          !isNaN(lng) &&
+          lat >= sw.lat() &&
+          lat <= ne.lat() &&
+          lng >= sw.lng() &&
+          lng <= ne.lng()
+        );
       });
-
-      newMarkers.push(marker);
-    });
-
-    // 기존 마커를 새 마커가 렌더된 후 제거
-    markerRef.current.forEach((marker) => marker.setMap(null));
-    // 마커 업데이트
-    markerRef.current = newMarkers;
+      
+      const newMarkers: naver.maps.Marker[] = [];
+      
+      // 마커생성
+      filtered.forEach((item: any) => {
+        const marker = new window.naver.maps.Marker({
+          position: new window.naver.maps.LatLng(item.lat, item.lng),
+          map,
+          title: item.title,
+          icon: {
+            url: markerIcons[type],
+            scaledSize: new window.naver.maps.Size(50, 50),
+            anchor: new window.naver.maps.Point(25, 25),
+          },
+        });
+        
+        window.naver.maps.Event.addListener(marker, "click", async () => {
+          const latlng = new window.naver.maps.LatLng(item.lat, item.lng);
+          const { address, cityName } = await searchCoordinateToAddress(
+            latlng,
+            item.title
+          );
+          setModalData({
+            type,
+            title: item.title,
+            address: address,
+            region: cityName,
+            phone: item.tel,
+            url: item.url,
+            charge: item.charge,
+            description: item.description,
+          });
+        });
+        
+        newMarkers.push(marker);
+        // 기존 마커를 새 마커가 렌더된 후 제거
+        markerRef.current.forEach((marker) => marker.setMap(null));
+        // 마커 업데이트
+        markerRef.current = newMarkers;
+      });
+      setHotelMarkers(newMarkers);
+      setIsOpen(true);
+    } else {
+      hotelMarkers.forEach((marker) => marker.setMap(null));
+      setHotelMarkers([]);
+      setIsOpen(false);
+    }
+      
   };
   // 호텔 위치 버튼
   const handleHotelLocationClick = () => showMarkers("hotel", "펜션");
@@ -695,18 +704,19 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
 
           {/* 지도 마크 버튼 */}
           <button
-            className="flex justify-center items-center px-4 py-2 bg-white/60 rounded-2xl"
+            className={`flex justify-center items-center px-4 py-2 rounded-2xl transition ${currentOpen ? "bg-blue-500 text-white" : "bg-white/60 text-black" }`}
             onClick={handleCurrentLocationClick}
             style={{ position: "absolute", top: 10, left: "50%", zIndex: 999 }}
           >
-            현재 위치
+            {currentOpen ? "현재위치" : "현재위치"}
           </button>
           <button
-            className="flex justify-center items-center px-4 py-2 bg-white/60 rounded-2xl"
+            className={`flex justify-center items-center px-4 py-2 rounded-2xl transition
+            ${isOpen ? "bg-blue-500 text-white" : "bg-white/60 text-black"}`}
             onClick={handleHotelLocationClick}
             style={{ position: "absolute", top: 10, left: "40%", zIndex: 999 }}
           >
-            숙박
+            {isOpen ? "숙박" : "숙박"}
           </button>
         </div>
 

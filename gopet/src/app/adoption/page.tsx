@@ -58,7 +58,7 @@ const Adaoption = () => {
     <>
       <Header isNavOpen={isNavOpen} toggleNav={toggleNav} />
       <div className="w-full relative overflow-visible mb-30">
-        <h1 className="text-3xl m-10">💗 유기동물 입양</h1>
+        <h1 className="flex justify-center text-3xl p-10">💗 유기동물 입양</h1>
         <div className="flex flex-col justify-center items-center">
           {adoptData.slice(0, 20).map((data: any, index: any) => (
             <div

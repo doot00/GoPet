@@ -4,16 +4,15 @@ import Script from "next/script";
 import { Coordinates } from "../components/Map/types/store";
 import { NaverMap } from "../components/Map/types/map";
 import { INITIAL_CENTER } from "../components/Map/MapComponent";
-import { AiOutlineEnvironment } from "react-icons/ai";
 import { GiRotaryPhone } from "react-icons/gi";
+import { AiOutlineEnvironment } from "react-icons/ai";
+import shelter from "../../shelter.json";
 import { useEffect, useRef, useState } from "react";
 import { useToggleNav } from "../components/hooks/useToggleNav";
 import Header from "../components/main/Header";
-import Footer from "../components/main/Footer";
-import { IoIosArrowForward } from "react-icons/io";
-
 import volunteerlist from "../../volunteerwork.json";
-import shelter from "../../shelter.json";
+import { TiHeart } from "react-icons/ti";
+import Footer from "../components/main/Footer";
 
 type Props = {
   mapId?: string;
@@ -39,18 +38,15 @@ interface ShelterData {
   phone: string;
 }
 
-export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
-  const [activeTab, setActiveTab] = useState(0);
-  const { isNavOpen, toggleNav } = useToggleNav(false);
-  const toggleOpen = () => setIsOpen((prev) => !prev);
-
+export default function Shelter({ mapId = "map", initialZoom = 10 }: Props) {
   const mapRef = useRef<naver.maps.Map | null>(null);
   const infoRaf = useRef<naver.maps.InfoWindow | null>(null);
-
-  // 현재 위치 on/off
+  const [activeTab, setActiveTab] = useState(0);
+  const [sidebarVisible, setSidebarVisible] = useState(true);
+  const { isNavOpen, toggleNav } = useToggleNav(false);
+  // 현재위치 on/off 
   const [currentOpen, setCurrentOpen] = useState(false);
-  const [currentLocation, setCurrentLocation] =
-    useState<naver.maps.Marker | null>(null);
+  const [ currentLocation, setCurrentLocation ] = useState<naver.maps.Marker | null>(null);
 
   // 보호소 마커 on/off
   const [isOpen, setIsOpen] = useState(false);
@@ -64,7 +60,6 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
     phone: string;
   }>(null);
 
-  // 봉사 Json가져오기
   const [volunData, setVolunData] = useState<VolunData[]>([]);
   useEffect(() => {
     const volunData = volunteerlist.map((data: any) => ({
@@ -77,7 +72,6 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
     setVolunData(volunData);
   }, []);
 
-  // 보호소 json가져오기
   const [shelterData, setShelterData] = useState<ShelterData[]>([]);
   useEffect(() => {
     const shelterData = shelter.map((data: any) => ({
@@ -107,7 +101,6 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
                     <p className="flex justify-center items-center text-xl font-bold m-2">
                       {modalData.title}
                     </p>
-                    <hr className="border-t border-gray-300 my-4" />
                     <div className="flex">
                       <span className="text-2xl">
                         <AiOutlineEnvironment />
@@ -134,7 +127,7 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
       content: (
         <>
           <hr className="border-t border-gray-300 my-4" />
-          <div className="flex justify-center items-center mb-5">
+          <div className="flex justify-center items-center mb-4">
             <div
               className="flex flex-col items-center mb-4 hide-scrollbar"
               style={{ height: "1000px", overflowY: "scroll" }}
@@ -142,21 +135,67 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
               {shelterData.map((data: any, index: any) => (
                 <div
                   key={index}
-                  className="bg-white justify-center items-center rounded-2xl p-4 mt-10 mb-10"
-                  style={{ width: "450px", height: "240px" }}
+                  className="bg-white justify-center items-center rounded-2xl p-4 mt-10"
+                  style={{ width: "450px", height: "200px" }}
                 >
-                  <p className="flex justify-center items-center text-xl font-bold m-3">
+                  <p className="flex justify-center items-center text-xl font-bold m-2">
                     {data.name}
                   </p>
-                  <hr className="border-t border-gray-300 my-4" />
-                  <div className="flex">
+                  <div className="flex items-center">
                     <span className="text-2xl">
                       <AiOutlineEnvironment />
                     </span>
-                    <span className="ml-2 mb-2">{data.address}</span>
+                    <span className="ml-2">{data.address}</span>
                   </div>
+                  <div className="flex items-center">
+                    <span className="ml-2">{data.phone}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      ),
+    },
+    {
+      id: 2,
+      name: "봉사활동",
+      content: (
+        <>
+          <hr className="border-t border-gray-300 my-4" />
+          <div className="flex justify-center items-center mb-4">
+            <div
+              className="flex flex-col items-center mb-4 hide-scrollbar"
+              style={{ height: "1000px", overflowY: "scroll" }}
+            >
+              {volunData.map((data: any, index: any) => (
+                <div
+                  key={index}
+                  className="bg-white justify-center items-center rounded-2xl p-4 mt-10"
+                  style={{ width: "450px", height: "200px" }}
+                >
+                  <p className="flex justify-center items-center text-xl font-bold m-2">
+                    {data.name}
+                  </p>
                   <div className="flex">
-                    <span className="ml-2 mb-2">Tel : {data.phone}</span>
+                    <span className="text-2xl">
+                      <TiHeart />
+                    </span>
+                    <span className="ml-2">{data.state}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="text-2xl">
+                      <AiOutlineEnvironment />
+                    </span>
+                    <span className="ml-2">{data.title}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span>봉사시작일자 :</span>
+                    <span className="ml-2">{data.begindate}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span>종료일자 :</span>
+                    <span className="ml-2">{data.enddate}</span>
                   </div>
                 </div>
               ))}
@@ -169,39 +208,39 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
 
   // 현재 위치 버튼
   const handleCurrentLocationClick = () => {
-    if (!currentOpen) {
-      if (!mapRef.current) return;
+  if (!currentOpen) {
+    if (!mapRef.current) return;
 
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition((position) => {
-          const currentLocation = new naver.maps.LatLng(
-            position.coords.latitude,
-            position.coords.longitude
-          );
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        const currentLocation = new naver.maps.LatLng(
+          position.coords.latitude,
+          position.coords.longitude
+        );
 
-          const marker = new naver.maps.Marker({
-            position: currentLocation,
-            map: mapRef.current!,
-            title: "현재 위치",
-          });
-
-          mapRef.current!.setCenter(currentLocation);
-
-          setCurrentLocation(marker); // 마커 상태 저장
-          setCurrentOpen(true); // 상태 ON
+        const marker = new naver.maps.Marker({
+          position: currentLocation,
+          map: mapRef.current!,
+          title: "현재 위치",
         });
-      }
-    } else {
-      // 마커 제거
-      if (currentLocation) {
-        currentLocation.setMap(null);
-        setCurrentLocation(null);
-      }
-      setCurrentOpen(false);
-    }
-  };
 
-  // 보호소 마커 버튼
+        mapRef.current!.setCenter(currentLocation);
+
+        setCurrentLocation(marker); // 마커 상태 저장
+        setCurrentOpen(true);      // 상태 ON
+      });
+    }
+  } else {
+    // 마커 제거
+    if (currentLocation) {
+      currentLocation.setMap(null);
+      setCurrentLocation(null);
+    }
+    setCurrentOpen(false);
+  }
+};
+
+  // 보호소 json파일 사용
   const handleShelterLocationClick = () => {
     if (!isOpen) {
       const newMarkers = shelter.map((data) => {
@@ -320,21 +359,12 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
   return (
     <>
       <Header isNavOpen={isNavOpen} toggleNav={toggleNav} />
-      <div className="flex h-screen w-full overflow-hidden">
-        {/* 사이드바 */}
-        <div
-          className={`flex transition-all duration-500 mb-10 ease-in-out ${
-            isOpen ? "w-[700px]" : "w-0"
-          }`}
-          style={{
-            backgroundColor: "#f3f4f6",
-            overflowY: "auto",
-          }}
-        >
+      <div style={{ display: "flex", width: "100%", height: "1200px" }}>
+        {sidebarVisible && (
           <div
             className="w3-sidebar w3-white w3-bar-block"
             style={{
-              width: "500px",
+              width: "40%",
               backgroundColor: "#f3f4f6",
               opacity: 0.95,
               padding: "1rem",
@@ -344,17 +374,26 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
               flexDirection: "column",
             }}
           >
-            <ul className="flex justify-start items-center">
+            <ul className="flex justify-between items-center">
               {tabs.map((tab) => (
                 <li
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex space-x-2 w3-bar-item w3-button ml-5 py-2 px-3 text-xl bg-white rounded-2xl hover:bg-gray-200 
-                        ${activeTab === tab.id ? "active bg-gray-300" : ""}`}
+                  className={`flex space-x-2 w3-bar-item w3-button m-1 py-2 px-4 bg-white rounded-2xl hover:bg-gray-200 ${
+                    activeTab === tab.id ? "active bg-gray-300" : ""
+                  }`}
                 >
                   {tab.name}
                 </li>
               ))}
+              <div>
+                <button
+                  className="relative justify-end w3-bar-item w3-button bg-blue-500 px-3 py-2 text-white rounded-2xl hover:bg-blue-600"
+                  onClick={() => setSidebarVisible(false)}
+                >
+                  닫기
+                </button>
+              </div>
             </ul>
             {tabs
               .filter((tab) => activeTab === tab.id)
@@ -362,35 +401,14 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
                 <div key={tab.id}>{tab.content}</div>
               ))}
           </div>
-        </div>
+        )}
 
-        {/* 사이드 바 옆 버튼*/}
-        <button
-          onClick={toggleOpen}
-          className="absolute top-50 left-0 z-50 flex items-center justify-center
-             bg-gray-900 text-white px-4 py-4 rounded hover:bg-gray-700
-             transition-all duration-500 ease-in-out"
-          style={{
-            // 버튼 폭 고정
-            transform: `translateY(-50%) ${
-              isOpen ? "translateX(495px)" : "translateX(0)"
-            }`,
-          }}
-        >
-          <IoIosArrowForward
-            style={{
-              transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
-              transition: "transform 0.3s ease",
-            }}
-          />
-        </button>
-
+        {/* 지도영역 */}
         <div
-          className="flex relative transition-all duration-500 ease-in-out"
           id={mapId}
           style={{
             width: "100%",
-            height: "1000px",
+            height: "100%",
             position: "relative",
             transition: "width 0.3s ease",
           }}
@@ -403,9 +421,7 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
 
           {/* 지도 마크 버튼 */}
           <button
-            className={`flex justify-center items-center px-4 py-2 rounded-2xl transition ${
-              currentOpen ? "bg-blue-500 text-white" : "bg-white/60 text-black"
-            }`}
+            className={`flex justify-center items-center px-4 py-2 rounded-2xl transition ${currentOpen ? "bg-blue-500 text-white" : "bg-white/60 text-black" }`}
             onClick={handleCurrentLocationClick}
             style={{ position: "absolute", top: 10, left: "50%", zIndex: 999 }}
           >
@@ -415,14 +431,18 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
             className={`flex justify-center items-center px-4 py-2 rounded-2xl transition
             ${isOpen ? "bg-blue-500 text-white" : "bg-white/60 text-black"}`}
             onClick={handleShelterLocationClick}
-            style={{ position: "absolute", top: 10, left: "40%", zIndex: 999 }}
+            style={{
+              position: "absolute",
+              top: 10,
+              left: "40%",
+              zIndex: 999,
+            }}
           >
             {isOpen ? "보호소" : "보호소"}
           </button>
         </div>
-
-        <Footer />
       </div>
+      <Footer />
     </>
   );
 }
