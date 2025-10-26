@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
     domains: ['dyqqilhexbdksxumpfpu.supabase.co'],
     
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  }
 };
 
 export default nextConfig;

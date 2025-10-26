@@ -14,13 +14,13 @@ interface SlideData {
   enddate: number;
   color: string;
   age: string;
-  kg: any;
+  kg: string;
   sex: string;
   spray: string;
   shelter: string;
   address: string;
   thnail: string; // 썸네일 이미지
-  img: any;
+  img: string;
   tel: string;
   info: string;
 }
@@ -60,7 +60,7 @@ const Adaoption = () => {
       <div className="w-full relative overflow-visible mb-30">
         <h1 className="flex justify-center text-3xl p-10">💗 유기동물 입양</h1>
         <div className="flex flex-col justify-center items-center">
-          {adoptData.slice(0, 20).map((data: any, index: any) => (
+          {adoptData.slice(0, 20).map((data: any, index: number) => (
             <div
               key={index}
               className="flex items-start rounded-3xl mb-10 ml-10"

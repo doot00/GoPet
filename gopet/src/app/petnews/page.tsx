@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useToggleNav } from "../components/hooks/useToggleNav";
-import { Pagination } from "swiper/modules";
 import Header from "../components/main/Header";
 import NewsItem from "../components/main/NewsItem";
 import axios from "axios";
@@ -30,7 +29,7 @@ useEffect(() => {
       // URL 기준으로 중복 제거
       const uniqueArticles = Array.from(
           new Map<string, Article>(
-            response.data.articles.map((article: any) => [article.url, article])
+            response.data.articles.map((article: Article) => [article.url, article])
           ).values()
         );
 
