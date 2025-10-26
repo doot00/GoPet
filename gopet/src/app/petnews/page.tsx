@@ -64,10 +64,6 @@ useEffect(() => {
       {articles.map(article => {
        return <NewsItem key={article.url} article={article}/>
       })}
-
-      {/* <Pagination activePage={page} itemsCountPerPage={postPerPage} totalItemsCount={길이}
-      pageRangeDisplayd={5} prevPageText={"<"} nextPageText={">"} onChange={handlePageChange}/> */}
-
     </>
   );
 };
