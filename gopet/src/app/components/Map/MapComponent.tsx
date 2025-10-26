@@ -5,14 +5,12 @@ import { useEffect, useRef, useState } from "react";
 import KcisaApi from "../../api/KcisaApi";
 import { Coordinates } from "./types/store";
 import { NaverMap } from "./types/map";
-import { GiRotaryPhone } from "react-icons/gi";
 import { AiOutlineEnvironment } from "react-icons/ai";
 import { IoIosArrowForward } from "react-icons/io";
 import { GiPositionMarker } from "react-icons/gi";
 import { useToggleNav } from "../hooks/useToggleNav";
 import Header from "../main/Header";
 import Footer from "../main/Footer";
-import { title } from "process";
 
 type Props = {
   mapId?: string;
