@@ -30,9 +30,11 @@ const Adaoption = () => {
   const [adoptData, setAdoptData] = useState<SlideData[]>([]);
 
   useEffect(() => {
+    if (!Array.isArray(abandonani)) return; // 배열이 아닐 경우 조기 종료
+
     const adoptData = (abandonani as any[])
       .filter((data) => data.STATE_NM === "보호중")
-      .map((data: any) => ({
+      .map((data) => ({
         sigun: data.SIGUN_NM,
         number: data.PBLANC_IDNTFY_ID,
         state: data.STATE_NM, // 보호중
@@ -52,7 +54,7 @@ const Adaoption = () => {
         tel: data.SLTR_TELNO,
       }));
     setAdoptData(adoptData);
-  }, []);
+  }, [abandonani]);
 
   return (
     <>
