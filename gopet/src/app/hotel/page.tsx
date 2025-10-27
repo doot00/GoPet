@@ -457,8 +457,6 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
 
   // 마커 버튼
   const showMarkers = async (type: PlaceType, keyword: string) => {
-    if(!isOpen) {
-
       const map = mapRef.current;
       if (!map) return;
       
@@ -528,18 +526,10 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
         
         newMarkers.push(marker);
         // 기존 마커를 새 마커가 렌더된 후 제거
-        markerRef.current.forEach((marker) => marker.setMap(null));
-        // 마커 업데이트
-        markerRef.current = newMarkers;
       });
-      setHotelMarkers(newMarkers);
-      setIsOpen(true);
-    } else {
-      hotelMarkers.forEach((marker) => marker.setMap(null));
-      setHotelMarkers([]);
-      setIsOpen(false);
-    }
-      
+      if(type === "hotel"){
+        return setHotelMarkers(newMarkers);
+      }
   };
   // 호텔 위치 버튼
   const handleHotelLocationClick = () => showMarkers("hotel", "펜션");
