@@ -76,7 +76,9 @@ export default function MapComponent({
 
   // 모든 마커 On/off
   const [isOpen, setIsOpen] = useState(false);
-  const [hospitalMarkers, setHospitalMarkers] = useState<naver.maps.Marker[]>([]);
+  const [hospitalMarkers, setHospitalMarkers] = useState<naver.maps.Marker[]>(
+    []
+  );
   const [ishospitalOpen, setHospitalOpen] = useState(false);
 
   const [cafeMarkers, setCafeMarkers] = useState<naver.maps.Marker[]>([]);
@@ -100,40 +102,40 @@ export default function MapComponent({
     url: string;
   }>(null);
 
-  // 카페 
-  const [cafeData, setCafeData] = useState<CafeDataType[]>([]) ;
+  // 카페
+  const [cafeData, setCafeData] = useState<CafeDataType[]>([]);
   useEffect(() => {
     const fetchData = async () => {
-      try{
+      try {
         const results = await KcisaApi();
-        const cafeData = results.filter((data: any) => data.category2 === "카페")
-        .map((data: any) => {
-          return {
-            title: data.title,
-            address: data.address,
-            description: data.description,
-            tel: data.tel,
-            url: data.url,
-            si: data.si,
-            gungu: data.gungu,
-          }
-        })
+        const cafeData = results
+          .filter((data: any) => data.category2 === "카페")
+          .map((data: any) => {
+            return {
+              title: data.title,
+              address: data.address,
+              description: data.description,
+              tel: data.tel,
+              url: data.url,
+              si: data.si,
+              gungu: data.gungu,
+            };
+          });
         setCafeData(cafeData);
       } catch (error) {
         console.log("API 호출 에러: ", error);
-        
       }
-    }
+    };
     fetchData();
   }, []);
 
-  // 음식점 
+  // 음식점
   const [foodData, setFoodData] = useState<FoodDataType[]>([]);
-    useEffect(() => {
-      const fetchData = async () => {
-        try {
-          const results = await KcisaApi();
-          const foodData = results
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const results = await KcisaApi();
+        const foodData = results
           .filter((data: any) => data.category2 === "식당")
           .map((data: any) => {
             return {
@@ -144,16 +146,16 @@ export default function MapComponent({
               url: data.url,
               si: data.si,
               gungu: data.gungu,
-            }
-          })
-          setFoodData(foodData);
-        } catch (error) {
+            };
+          });
+        setFoodData(foodData);
+      } catch (error) {
         console.log("API 호출 에러: ", error);
       }
-    }
+    };
     fetchData();
   }, []);
-  
+
   // 모달 지역 선택
   const [selectSido, setSelectSido] = useState("");
   const [selectSigungu, setSelectSigungu] = useState("");
@@ -558,89 +560,127 @@ export default function MapComponent({
 
   // 마커 버튼
   const showMarkers = async (type: PlaceType, keyword: string) => {
-    if (!cafeMarkers || !foodMarkers || !parkMarkers || !hospitalMarkers) {
-      const map = mapRef.current;
-      if (!map) return;
+    const map = mapRef.current;
+    if (!map) return;
 
-      if (!hasSetIdleListener.current) {
-        window.naver.maps.Event.addListener(map, "idle", () => {
-          showMarkers(type, keyword);
-        });
-        hasSetIdleListener.current = true;
+    if (!hasSetIdleListener.current) {
+      window.naver.maps.Event.addListener(map, "idle", () => {
+        showMarkers(type, keyword);
+      });
+      hasSetIdleListener.current = true;
+    }
+
+    // 타입별 기존 마커 제거
+    const clearMarkers = (markers: naver.maps.Marker[]) => {
+      markers.forEach((marker) => marker.setMap(null));
+    };
+
+    // 타입별로 현재 상태 참조
+    let currentMarkers: naver.maps.Marker[] = [];
+    switch (type) {
+      case "hospital":
+        currentMarkers = hospitalMarkers;
+        break;
+      case "cafe":
+        currentMarkers = cafeMarkers;
+        break;
+      case "food":
+        currentMarkers = foodMarkers;
+        break;
+      case "park":
+        currentMarkers = parkMarkers;
+        break;
+    }
+
+    // 이미 마커가 있다면 제거하고 종료 (토글 기능)
+    if (currentMarkers.length > 0) {
+      clearMarkers(currentMarkers);
+      switch (type) {
+        case "hospital":
+          setHospitalMarkers([]);
+          break;
+        case "cafe":
+          setCafeMarkers([]);
+          break;
+        case "food":
+          setFoodMarkers([]);
+          break;
+        case "park":
+          setParkMarkers([]);
+          break;
       }
+      return;
+    }
 
-      const results = await KcisaApi(keyword);
+    // 데이터 가져오기
+    const results = await KcisaApi(keyword);
 
-      const bounds = map.getBounds() as naver.maps.LatLngBounds;
-      const sw = bounds.getSW();
-      const ne = bounds.getNE();
+    const bounds = map.getBounds() as naver.maps.LatLngBounds;
+    const sw = bounds.getSW();
+    const ne = bounds.getNE();
 
-      const filtered = results.filter((item: any) => {
-        const lat = parseFloat(item.lat);
-        const lng = parseFloat(item.lng);
-        return (
-          !isNaN(lat) &&
-          !isNaN(lng) &&
-          lat >= sw.lat() &&
-          lat <= ne.lat() &&
-          lng >= sw.lng() &&
-          lng <= ne.lng()
+    const filtered = results.filter((item: any) => {
+      const lat = parseFloat(item.lat);
+      const lng = parseFloat(item.lng);
+      return (
+        !isNaN(lat) &&
+        !isNaN(lng) &&
+        lat >= sw.lat() &&
+        lat <= ne.lat() &&
+        lng >= sw.lng() &&
+        lng <= ne.lng()
+      );
+    });
+
+    const newMarkers: naver.maps.Marker[] = [];
+
+    filtered.forEach((item: any) => {
+      const marker = new window.naver.maps.Marker({
+        position: new window.naver.maps.LatLng(item.lat, item.lng),
+        map,
+        title: item.title,
+        icon: {
+          url: markerIcons[type],
+          scaledSize: new window.naver.maps.Size(50, 50),
+          anchor: new window.naver.maps.Point(25, 25),
+        },
+      });
+
+      window.naver.maps.Event.addListener(marker, "click", async () => {
+        const latlng = new window.naver.maps.LatLng(item.lat, item.lng);
+        const { address, cityName } = await searchCoordinateToAddress(
+          latlng,
+          item.title
         );
+        setModalData({
+          type,
+          title: item.title,
+          address,
+          region: cityName,
+          phone: item.tel,
+          url: item.url,
+          charge: item.charge,
+          description: item.description,
+        });
       });
 
-        const newMarkers: naver.maps.Marker[] = [];
-    
-        // 마커생성
-        filtered.forEach((item: any) => {
-          const marker = new window.naver.maps.Marker({
-            position: new window.naver.maps.LatLng(item.lat, item.lng),
-            map,
-            title: item.title,
-            icon: {
-              url: markerIcons[type],
-              scaledSize: new window.naver.maps.Size(50, 50),
-              anchor: new window.naver.maps.Point(25, 25),
-            },
-          });
-    
-          window.naver.maps.Event.addListener(marker, "click", async () => {
-            const latlng = new window.naver.maps.LatLng(item.lat, item.lng);
-            const { address, cityName } = await searchCoordinateToAddress(
-              latlng,
-              item.title
-            );
-            setModalData({
-              type,
-              title: item.title,
-              address: address,
-              region: cityName,
-              description: item.description,
-              charge: item.charge,
-              url: item.url,
-              phone: item.tel,
-            });
-          });
-    
-          newMarkers.push(marker);
-          // 기존 마커를 새 마커가 렌더된 후 제거
-          markerRef.current.forEach((marker) => marker.setMap(null));
-      
-          // 마커 업데이트
-          markerRef.current = newMarkers;
-          return newMarkers;
-      });
-      setCafeMarkers(newMarkers);
-      setIsOpen(true);
-    }else {
-      cafeMarkers.forEach((marker) => marker.setMap(null));
-      foodMarkers.forEach((marker) => marker.setMap(null));
-      parkMarkers.forEach((marker) => marker.setMap(null));
-      hospitalMarkers.forEach((marker) => marker.setMap(null));
-      setCafeMarkers([]);
-      setFoodMarkers([]);
-      setParkMarkers([]);
-      setHospitalMarkers([]);
-      setIsOpen(false);
+      newMarkers.push(marker);
+    });
+
+    // 타입별로 저장
+    switch (type) {
+      case "hospital":
+        setHospitalMarkers(newMarkers);
+        break;
+      case "cafe":
+        setCafeMarkers(newMarkers);
+        break;
+      case "food":
+        setFoodMarkers(newMarkers);
+        break;
+      case "park":
+        setParkMarkers(newMarkers);
+        break;
     }
   };
 
@@ -846,44 +886,43 @@ export default function MapComponent({
           {/* 지도 마크 버튼 */}
           <button
             className={`flex justify-center items-center px-4 py-2 rounded-2xl transition
-            ${cafeMarkers ? "bg-blue-500 text-white" : "bg-white/60 text-black"}`}
+            bg-white/60 text-black`}
             onClick={handleCafeLocationClick}
             style={{ position: "absolute", top: 10, left: "30%", zIndex: 999 }}
           >
-            {cafeMarkers ? "카페" : "카페"}
+            카페
           </button>
           <button
             className={`flex justify-center items-center px-4 py-2 rounded-2xl transition
-            ${foodMarkers ? "bg-blue-500 text-white" : "bg-white/60 text-black"}`}
+            bg-white/60 text-black`}
             onClick={handleFoodLocationClick}
             style={{ position: "absolute", top: 10, left: "40%", zIndex: 999 }}
           >
-            {foodMarkers ? "음식" : "음식"}
+            음식
           </button>
           <button
-            className={`flex justify-center items-center px-4 py-2 rounded-2xl transition ${
-              currentOpen ? "bg-blue-500 text-white" : "bg-white/60 text-black"
+            className={`flex justify-center items-center px-4 py-2 rounded-2xl transition bg-white/60 text-black
             }`}
             onClick={handleCurrentLocationClick}
             style={{ position: "absolute", top: 10, left: "50%", zIndex: 999 }}
           >
-            {currentOpen ? "현재위치" : "현재위치"}
+            현재위치
           </button>
           <button
             className={`flex justify-center items-center px-4 py-2 rounded-2xl transition
-            ${parkMarkers ? "bg-blue-500 text-white" : "bg-white/60 text-black"}`}
+            bg-white/60 text-black`}
             onClick={handleParkLocationClick}
             style={{ position: "absolute", top: 10, left: "60%", zIndex: 999 }}
           >
-            {parkMarkers ? "공원" : "공원" }
+            공원
           </button>
           <button
             className={`flex justify-center items-center px-4 py-2 rounded-2xl transition
-            ${hospitalMarkers ? "bg-blue-500 text-white" : "bg-white/60 text-black"}`}
+            bg-white/60 text-black`}
             onClick={handleHospitalLocationClick}
             style={{ position: "absolute", top: 10, left: "70%", zIndex: 999 }}
           >
-            {hospitalMarkers ? "동물병원" : "동물병원"}
+            동물병원
           </button>
         </div>
         <Footer />

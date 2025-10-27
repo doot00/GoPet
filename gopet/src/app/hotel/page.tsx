@@ -704,19 +704,18 @@ export default function Hotel({ mapId = "map", initialZoom = 10 }: Props) {
 
           {/* 지도 마크 버튼 */}
           <button
-            className={`flex justify-center items-center px-4 py-2 rounded-2xl transition ${currentOpen ? "bg-blue-500 text-white" : "bg-white/60 text-black" }`}
+            className={`flex justify-center items-center px-4 py-2 rounded-2xl transition bg-white/60 text-black `}
             onClick={handleCurrentLocationClick}
             style={{ position: "absolute", top: 10, left: "50%", zIndex: 999 }}
           >
-            {currentOpen ? "현재위치" : "현재위치"}
+            현재위치
           </button>
           <button
-            className={`flex justify-center items-center px-4 py-2 rounded-2xl transition
-            ${isOpen ? "bg-blue-500 text-white" : "bg-white/60 text-black"}`}
+            className={`flex justify-center items-center px-4 py-2 rounded-2xl transition bg-white/60 text-black`}
             onClick={handleHotelLocationClick}
             style={{ position: "absolute", top: 10, left: "40%", zIndex: 999 }}
           >
-            {isOpen ? "숙박" : "숙박"}
+            숙박
           </button>
         </div>
 
